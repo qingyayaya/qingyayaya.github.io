@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>MathJax 服务端渲染 LaTeX</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">MathJax 服务端渲染 LaTeX</p>
+        <p class="date">2022-03-10 19:00:00</p>
+        
+        <div class="content">
+            <p>开始之前，先分清 SSR 和 CSR 的区别：</p>
+<blockquote>
+<p>Server Side Render，服务端渲染，指服务器生成完整的 html，浏览器直接显示出网页。</p>
+<p>Client Side Render，客户端渲染，指服务器只返回一个 html 模板，浏览器执行 js 代码渲染出网页。</p>
+</blockquote>
+<p>我要把<a href="https://qingyayaya.github.io/">我的博客</a>从原本<strong>客户端渲染</strong>的方式修改成<strong>服务端渲染</strong>的方式。其中的一个难点是如何实现服务端渲染 LaTeX。</p>
+<h1 id="mathjax">MathJax</h1>
+<p>MathJax 是所有现代浏览器（ IE 不属于现代浏览器）通用的 LaTeX、MathML 和 AsciiMath 表示法的开源 Javascript 显示引擎。当今网页上显示的数学公式八九成都是由 MathJax 一手包揽的。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/MathJax.png" width="400"></center></p>
+<p>它的用法也足够简单，在 html 引入MathJax 的 js 文件，用<code>$</code>包围 LaTeX 代码，如此便搞定了。正如官网所说：</p>
+<blockquote>
+<p>No more setup for readers. It just works.</p>
+</blockquote>
+<h1 id="客户端渲染的弊端">客户端渲染的弊端</h1>
+<p>在博客上显示 LaTeX 数学公式，一直很困扰我，倒不是说技术上有多难实现（前面也说了 MathJax 的用法是弱智级别的），而是我有些文章使用了上百个 LaTeX 公式，以《<a href="https://qingyayaya.github.io/post/%E4%BB%8E%20ln(1+x)%20%E7%9A%84%E8%BF%9E%E5%88%86%E5%BC%8F%E5%B1%95%E5%BC%80%E8%B0%88%E8%B5%B7/">从 ln(1+x) 的连分式展开谈起</a>》为例：</p>
+<center><video src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/CSR.mp4" controls autoplay loop muted>your browser does not support the video tag</video></center><p>整个渲染过程花了 10 多秒！我们总是希望一个页面显示的越快越好。而且，公式提取 → 公式处理 → 公式预显示 → 换成TeX字体的整个流程下来，公式的形式变来变去，页面上蹿下跳，真就还不如等 10 秒全部渲染完后再显示出来呢。不仅影响读者的阅读体验，对我个人来说这种糟糕的设计非常折磨人。</p>
+<p>还有一个非常劳什子的右键菜单，根本用不到，即便可以配置成默认关闭，但是，这并不极简。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/menu.png" width="300"></center></p>
+<p>所以，客户端渲染 LaTeX 体现出了一些弊端（至少对我来说是弊端），于是我思考能否事先渲染好 LaTeX 公式，生成纯静态的页面，达到服务端一次生成，客户端后续无需重复渲染，从根源上解决问题呢？</p>
+<h1 id="如何服务端渲染">如何服务端渲染</h1>
+<p>既然有了这样的需求，我就去 MathJax 的<a href="https://docs.mathjax.org/en/latest/index.html">官方文档</a>寻找帮助，看到下面一段话：</p>
+<blockquote>
+<p>It was designed to be used as easily <strong>on a server</strong> (as part of a <code>node.js</code> application) as it is in a browser. This makes pre-processing of web pages containing mathematics much easier than with version 2, so <strong>web sites can perform all the math processing once up front, rather than having the browser do it each time the page is viewed</strong>.</p>
+</blockquote>
+<p>好家伙，完美地契合了我的需求，借助 Node.js 环境即可。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/nice.jpg" width="150"></center></p>
+<p>那么这里又不得不提一下 MathJax 的版本问题，MathJax 3.X 相比 MathJax 2.X 做了不小的变动，我们较为关注的一点是：MathJax 3.X 既可<strong>异步</strong>，也可<strong>同步</strong>。同步是至关重要的，因为我想拿到字符串形式的转换结果，然后拼接进 html 总字符串，类似于<code>html += convert(&#39;E = mc^2&#39;)</code>，所以必须用 3.X 的版本。</p>
+<hr>
+<p>另外也不得不提一个叫做 mathjax-node 的库，这个库就是为了方便在 Node.js 中使用 MathJax，之所以不用它，就是因为它基于 MathJax 2.X，只提供了异步操作。而且，我想尽量避免使用二次封装的库，想使用原生的 MathJax 来实现。</p>
+<h1 id="在-nodejs-中使用-mathjax">在 Node.js 中使用 MathJax</h1>
+<p>首先下载 MathJax 库，我用的是 3.2.0 版本：</p>
+<pre data-lang="bash"><code class="hljs language-bash">npm i mathjax@3.2.0
+</code></pre>
+<p>如果阅读 MathJax 的源代码，你会发现里面有很多 dom 操作，毕竟是为浏览器而开发的嘛，然而 Node.js 可并没有给我们提供 dom 操作的 API，为之奈何？</p>
+<blockquote>
+<p>答：有一种叫做虚拟 dom 的东西。</p>
+</blockquote>
+<p>我们可以在 Node.js 中生成虚拟 dom，之后的操作就和浏览器几乎无异了。至于如何生成虚拟 dom，MathJax 也已经内置好了，无需过多关心。只需要<code>require</code>一下 MathJax 库：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;mathjax&#x27;</span>).<span class="hljs-title function_">init</span>({
+  <span class="hljs-attr">loader</span>: {
+    <span class="hljs-attr">load</span>: [<span class="hljs-string">&#x27;input/tex&#x27;</span>, <span class="hljs-string">&#x27;output/svg&#x27;</span>]
+  }
+}).<span class="hljs-title function_">then</span>( <span class="hljs-function">(<span class="hljs-params">MathJax</span>) =&gt;</span> {
+  <span class="hljs-comment">// 此时获得了MathJax对象</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-title class_">MathJax</span>);
+  ...
+}).<span class="hljs-title function_">catch</span>( <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {<span class="hljs-keyword">throw</span> err} );
+</code></pre>
+<p>获得 MathJax 对象是关键，可以在 console 中打印出来，它长下面这样：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/object.png" width="360"></center></p>
+<p>一些有用的属性和方法列举如下：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">// 获取虚拟document</span>
+<span class="hljs-title class_">MathJax</span>.<span class="hljs-property">startup</span>.<span class="hljs-title function_">getDocument</span>().<span class="hljs-property">document</span>
+
+<span class="hljs-comment">// adaptor提供了一些dom操作</span>
+<span class="hljs-title class_">MathJax</span>.<span class="hljs-property">startup</span>.<span class="hljs-property">adaptor</span>
+
+<span class="hljs-comment">// 比如，得到fooNode的子节点</span>
+<span class="hljs-title class_">MathJax</span>.<span class="hljs-property">startup</span>.<span class="hljs-property">adaptor</span>.<span class="hljs-title function_">childNodes</span>( fooNode );
+</code></pre>
+<h1 id="tex2chtml">tex2chtml</h1>
+<p>可以用 CommonHTML 或 SVG 的形式在网页上显示 LaTeX（ MathML就直接 pass 吧），分别对应<code>MathJax.tex2chtml()</code>和<code>MathJax.tex2svg()</code>。</p>
+<p>我一开始是倾向于使用 CommonHTML，因为输出的结果会更轻量一些。此时需要在导入的时候把<code>output</code>配置成 chtml：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-attr">loader</span>: {
+  <span class="hljs-attr">load</span>: [<span class="hljs-string">&#x27;input/tex&#x27;</span>, <span class="hljs-string">&#x27;output/chtml&#x27;</span>]
+}
+</code></pre>
+<p>然后，使用<code>MathJax.tex2chtml()</code>把 TeX 字符串转换成 CommonHTML 节点：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-keyword">var</span> html = <span class="hljs-title class_">MathJax</span>.<span class="hljs-title function_">tex2chtml</span>(<span class="hljs-string">&#x27;E = mc^2&#x27;</span>);
+</code></pre>
+<p>注意，这里<code>html</code>是节点。如果想拿到字符串形式的节点，可以利用 adaptor 提供的 dom 操作：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-keyword">var</span> outerHTML = <span class="hljs-title class_">MathJax</span>.<span class="hljs-property">startup</span>.<span class="hljs-property">adaptor</span>.<span class="hljs-title function_">outerHTML</span>(html);
+</code></pre>
+<p>为了方便演示，我直接用浏览器的 console 执行代码（本质和 Node.js 是一样的）</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/tex2chtml.png" width="500"></center></p>
+<p>但是，当你新建一个 html 文件，把得到的字符串粘贴进去，用浏览器打开后，公式处会是空白，惊喜不惊喜，这是因为我们没有得到对应的层叠样式表 CSS。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/vs.jpg" width="150"></center></p>
+<p>抽丝剥茧一下，当把节点添加到 document 里，这些 CSS 会被 MathJax 自动地写入 document。以公式 <mjx-container class="MathJax" jax="SVG"><svg style="vertical-align: -0.186ex;" xmlns="http://www.w3.org/2000/svg" width="8.699ex" height="2.072ex" role="img" focusable="false" viewBox="0 -833.9 3845.1 915.9" xmlns:xlink="http://www.w3.org/1999/xlink"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><use data-c="1D438" xlink:href="#MJX-TEX-I-1D438"></use></g><g data-mml-node="mo" transform="translate(1041.8,0)"><use data-c="3D" xlink:href="#MJX-TEX-N-3D"></use></g><g data-mml-node="mi" transform="translate(2097.6,0)"><use data-c="1D45A" xlink:href="#MJX-TEX-I-1D45A"></use></g><g data-mml-node="msup" transform="translate(2975.6,0)"><g data-mml-node="mi"><use data-c="1D450" xlink:href="#MJX-TEX-I-1D450"></use></g><g data-mml-node="mn" transform="translate(466,363) scale(0.707)"><use data-c="32" xlink:href="#MJX-TEX-N-32"></use></g></g></g></g></svg></mjx-container> 里的数学斜体 E 为例，它的 Unicode 编码是<code>1D438</code>：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/E_Unicode.png" width="300"></center></p>
+<p>把节点添加到 document 里，可以找到<code>1D438</code>对应的标签，MathJax 给类名添加了<code>mjx-c</code>前缀：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/E_html.png" width="300"></center></p>
+<p>在浏览器里，可以找到<code>mjx-c1D438</code>类的 CSS：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/E_css.png" width="300"></center></p>
+<p>在 Node.js 里，这些 CSS 显然也被添加到了规则树里，想把它们提取出来还是有办法的，就算实在不行还有最笨的办法，比如我就在源代码里定位到了<code>addCharStyles()</code>函数，完全可以用来输出 CSS：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/code.png" width="500"></center></p>
+<p>但是，当推理进行到这里，我却转变了观念，我不想用 CommonHTML 的形式显示公式了，转而想用 SVG。一是因为提取 CSS 虽然可行却不优雅，二是 SVG 比 CommonHTML 更加鲁棒。</p>
+<h1 id="tex2svg">tex2svg</h1>
+<p>输出 SVG，需要在导入的时候把<code>output</code>配置成 svg：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-attr">loader</span>: {
+  <span class="hljs-attr">load</span>: [<span class="hljs-string">&#x27;input/tex&#x27;</span>, <span class="hljs-string">&#x27;output/svg&#x27;</span>]
+}
+</code></pre>
+<p>然后，把 TeX 字符串转换成 SVG 节点：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-keyword">var</span> html = <span class="hljs-title class_">MathJax</span>.<span class="hljs-title function_">tex2svg</span>(<span class="hljs-string">&#x27;E = mc^2&#x27;</span>);
+</code></pre>
+<p>放到浏览器里演示：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/tex2svg.png" width="600"></center></p>
+<p>结果是一个用<code>&lt;mjx-container&gt;</code>标签包裹的<code>&lt;svg&gt;</code>标签。</p>
+<h1 id="fontcache">fontCache</h1>
+<p>本来我以为把<code>tex2svg()</code>的结果再转成字符串就搞定了，但是仔细观察，输出的<code>&lt;svg&gt;</code>包括<code>&lt;defs&gt;</code>标签和<code>&lt;g&gt;</code>标签，<code>&lt;defs&gt;</code>存放每个字符的形状信息，<code>&lt;g&gt;</code>用来组合元素。<code>&lt;defs&gt;</code>的数据量最多：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/defs.png" width="600"></center></p>
+<p>所以问题来了，比如我需要渲染页面上的 100 个公式，每个公式里都有等于号，那么输出的每个 SVG 里都有等于号的<code>&lt;path&gt;</code>，这部分数据被重复保存成 100 份。明明保存 1 份等于号的形状，其他地方引用就行了啊。我们到底还能不能进一步优化？</p>
+<blockquote>
+<p>答：可以，使用fontCache。</p>
+</blockquote>
+<p>在导入的时候把 svg 的<code>fontCache</code>设置成<code>&#39;global&#39;</code>：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-attr">loader</span>: {
+  <span class="hljs-attr">load</span>: [<span class="hljs-string">&#x27;input/tex&#x27;</span>, <span class="hljs-string">&#x27;output/svg&#x27;</span>]
+},
+<span class="hljs-attr">svg</span>: {
+  <span class="hljs-attr">fontCache</span>: <span class="hljs-string">&#x27;global&#x27;</span>
+}
+</code></pre>
+<p>之后，每次<code>tex2svg()</code>的输出便不再包含<code>&lt;defs&gt;</code>标签，而是把它放入缓存。在转换 100 个公式的过程中，每当遇到新的字符，就把它的<code>&lt;path&gt;</code>加入缓存，之前出现过的字符便不再重复加入。这就达到了<strong>最高程度的形状复用</strong>。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/xiaowanzi.gif" width="150"></center></p>
+<p>最后，把缓存提取出来即可：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-keyword">var</span> defs = <span class="hljs-title class_">MathJax</span>.<span class="hljs-property">startup</span>.<span class="hljs-property">output</span>.<span class="hljs-property">fontCache</span>.<span class="hljs-title function_">getCache</span>();
+</code></pre>
+<p>问题又来了，当我们去渲染下一个页面时，上个页面的缓存依然存在，所以需要先把上个页面的缓存清理掉：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-title class_">MathJax</span>.<span class="hljs-property">startup</span>.<span class="hljs-property">output</span>.<span class="hljs-property">fontCache</span>.<span class="hljs-title function_">clearCache</span>();
+</code></pre>
+<p>到此为止，算是把 TeX 转 SVG 彻底搞定了。对比一下引用<code>&lt;path&gt;</code>和不引用的区别，还以《<a href="https://qingyayaya.github.io/post/%E4%BB%8E%20ln(1+x)%20%E7%9A%84%E8%BF%9E%E5%88%86%E5%BC%8F%E5%B1%95%E5%BC%80%E8%B0%88%E8%B5%B7/">从 ln(1+x) 的连分式展开谈起</a>》为例，不引用时生成的静态 html 文件大小为 1.3 MB，引用后大小为 761 KB，<strong>体积直接减半</strong>，瘦身效果明显。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/fat.gif" width="180"></center></p>
+<hr>
+<p>那么我是怎么知道<code>MathJax.startup.output.fontCache.getCache()</code>这个函数的呢？因为俺去查看了 MathJax 的源代码，结合 console 一点点分析出来的。然而，我在写这篇文章的时候，发现原来<a href="https://docs.mathjax.org/en/latest/web/typeset.html#conversion-stylesheet">官方文档里有说明</a>啊，明确告诉了有<code>clearCache()</code>这个东西，我直接裂开，说多了全是泪。好吧，也是有收获的，如果我事先就知道，真就没有动力去分析源码了，过程比结果更重要。</p>
+<h1 id="宏包">宏包</h1>
+<p>就在我沾沾自喜的时候，又报错啦！！！</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/dog.jpg" width="150"></center></p>
+<p>仔细一看，有一个公式渲染不了：</p>
+<pre data-lang="latex"><code class="hljs language-latex"><span class="hljs-built_in">$</span><span class="hljs-built_in">$</span>
+<span class="hljs-keyword">\require</span>{extpfeil}
+<span class="hljs-keyword">\tan</span> <span class="hljs-keyword">\alpha</span> = <span class="hljs-keyword">\frac</span>{dY}{dX} = <span class="hljs-keyword">\frac</span>{R d<span class="hljs-keyword">\phi</span>}{R <span class="hljs-keyword">\cos</span> <span class="hljs-keyword">\phi</span> d<span class="hljs-keyword">\lambda</span>}
+<span class="hljs-keyword">\xlongequal</span>{等角约束} <span class="hljs-keyword">\tan</span> <span class="hljs-keyword">\beta</span> = <span class="hljs-keyword">\frac</span>{dy}{dx}
+<span class="hljs-built_in">$</span><span class="hljs-built_in">$</span>
+</code></pre>
+<p>原来它带有<code>\require{extpfeil}</code>，无法识别。引入这个宏包是为了使用长等号，我必须要用，为之奈何？</p>
+<blockquote>
+<p>答：引入 package。</p>
+</blockquote>
+<p>MathJax 提供了对三十多个常用宏包的支持，使用下面的代码即可查看支持的列表：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-title class_">MathJax</span>.<span class="hljs-property">config</span>.<span class="hljs-property">loader</span>.<span class="hljs-property">provides</span>[<span class="hljs-string">&quot;[tex]/all-packages&quot;</span>]
+</code></pre>
+<p>结果为：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/package.png" width="360"></center></p>
+<p>在导入的时候，可以有选择地导入多个宏包，以 extpfeil 宏包为例：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-attr">loader</span>: {
+  <span class="hljs-attr">load</span>: [<span class="hljs-string">&#x27;input/tex&#x27;</span>, <span class="hljs-string">&#x27;output/svg&#x27;</span>, <span class="hljs-string">&#x27;[tex]/extpfeil&#x27;</span>]
+},
+<span class="hljs-attr">tex</span>: {
+  <span class="hljs-attr">packages</span>: {<span class="hljs-string">&#x27;[+]&#x27;</span>: [<span class="hljs-string">&#x27;extpfeil&#x27;</span>]}
+},
+<span class="hljs-attr">svg</span>: {
+  <span class="hljs-attr">fontCache</span>: <span class="hljs-string">&#x27;global&#x27;</span>
+}
+</code></pre>
+<p>如此便功德圆满了。</p>
+<h1 id="结尾">结尾</h1>
+<p>即便 MathJax 有着臃肿、迟钝等等缺点，也不乏有像 KaTeX 这样轻量又快速的渲染引擎，但我仍然是一个彻彻底底的 MathJax 党，因为它真的很强大，它是无可取代的，我也很喜欢它，其他引擎在它面前总显得不入流，它在一次次迭代中变得更好用，以前也没想过稍稍地探索它一下，这次确实是够折腾的。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/exhausted.jpg" width="150"></center></p>
+<svg style="display: none" id="MJX-SVG-global-cache"><defs><path id="MJX-TEX-I-1D438" d="M492 213Q472 213 472 226Q472 230 477 250T482 285Q482 316 461 323T364 330H312Q311 328 277 192T243 52Q243 48 254 48T334 46Q428 46 458 48T518 61Q567 77 599 117T670 248Q680 270 683 272Q690 274 698 274Q718 274 718 261Q613 7 608 2Q605 0 322 0H133Q31 0 31 11Q31 13 34 25Q38 41 42 43T65 46Q92 46 125 49Q139 52 144 61Q146 66 215 342T285 622Q285 629 281 629Q273 632 228 634H197Q191 640 191 642T193 659Q197 676 203 680H757Q764 676 764 669Q764 664 751 557T737 447Q735 440 717 440H705Q698 445 698 453L701 476Q704 500 704 528Q704 558 697 578T678 609T643 625T596 632T532 634H485Q397 633 392 631Q388 629 386 622Q385 619 355 499T324 377Q347 376 372 376H398Q464 376 489 391T534 472Q538 488 540 490T557 493Q562 493 565 493T570 492T572 491T574 487T577 483L544 351Q511 218 508 216Q505 213 492 213Z"></path><path id="MJX-TEX-N-3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path><path id="MJX-TEX-I-1D45A" d="M21 287Q22 293 24 303T36 341T56 388T88 425T132 442T175 435T205 417T221 395T229 376L231 369Q231 367 232 367L243 378Q303 442 384 442Q401 442 415 440T441 433T460 423T475 411T485 398T493 385T497 373T500 364T502 357L510 367Q573 442 659 442Q713 442 746 415T780 336Q780 285 742 178T704 50Q705 36 709 31T724 26Q752 26 776 56T815 138Q818 149 821 151T837 153Q857 153 857 145Q857 144 853 130Q845 101 831 73T785 17T716 -10Q669 -10 648 17T627 73Q627 92 663 193T700 345Q700 404 656 404H651Q565 404 506 303L499 291L466 157Q433 26 428 16Q415 -11 385 -11Q372 -11 364 -4T353 8T350 18Q350 29 384 161L420 307Q423 322 423 345Q423 404 379 404H374Q288 404 229 303L222 291L189 157Q156 26 151 16Q138 -11 108 -11Q95 -11 87 -5T76 7T74 17Q74 30 112 181Q151 335 151 342Q154 357 154 369Q154 405 129 405Q107 405 92 377T69 316T57 280Q55 278 41 278H27Q21 284 21 287Z"></path><path id="MJX-TEX-I-1D450" d="M34 159Q34 268 120 355T306 442Q362 442 394 418T427 355Q427 326 408 306T360 285Q341 285 330 295T319 325T330 359T352 380T366 386H367Q367 388 361 392T340 400T306 404Q276 404 249 390Q228 381 206 359Q162 315 142 235T121 119Q121 73 147 50Q169 26 205 26H209Q321 26 394 111Q403 121 406 121Q410 121 419 112T429 98T420 83T391 55T346 25T282 0T202 -11Q127 -11 81 37T34 159Z"></path><path id="MJX-TEX-N-32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></defs></svg>
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>MathJax 服务端渲染 LaTeX</strong></p>
+                <p><a href="/post/MathJax 服务端渲染 LaTeX/">https://qingyayaya.github.io/post/MathJax 服务端渲染 LaTeX/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2022-03-10 19:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>

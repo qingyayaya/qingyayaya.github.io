@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>JSXGraph - 尺规作正十七边形</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">JSXGraph - 尺规作正十七边形</p>
+        <p class="date">2021-10-17 20:00:00</p>
+        
+        <div class="content">
+            <link rel="stylesheet" type="text/css" href="https://gcore.jsdelivr.net/npm/jsxgraph@1.3.2/distrib/jsxgraph.css"/>
+
+<script type="text/javascript" src="https://gcore.jsdelivr.net/npm/jsxgraph@1.3.2/distrib/jsxgraphcore.js"></script>
+
+<style type="text/css">
+.jxgbox {
+    width: 600px;
+    height: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+@media screen and (max-width: 500px) {
+.jxgbox {
+    width: 320px;
+    height: 320px;
+}
+}
+</style>
+
+<p>讲解尺规作正十七边形原理的博客多如牛毛，这里就不赘述了。我们用 JSXGraph 实现一种最经典的作法：</p>
+<h1 id="展示">展示</h1>
+<div id="jxgbox" class="jxgbox"></div>
+
+<br />
+
+<table>
+<thead>
+<tr>
+<th align="center"><input type="checkbox" checked="checked" onclick="AllChecked(this)"/></th>
+<th>步骤</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="LineABVisible(this)"/></td>
+<td>任意做线段 AB，B 点将作为正十七边形顶点之一</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Line1Visible(this)"/></td>
+<td>做线段 AB 的中垂线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointEVisible(this)"/></td>
+<td>关键点 E 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="CircumCircleVisible(this)"/></td>
+<td>以 E 为圆心，过点 A 做圆。这个圆将是正十七边形的外接圆</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Line2Visible(this)"/></td>
+<td>做线段 EF 的中垂线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Line3Visible(this)"/></td>
+<td>做线段 EI 的中垂线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointLVisible(this)"/></td>
+<td>关键点 L 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="LineBLVisible(this)"/></td>
+<td>连接 BL，实际上用不到这条线，做视觉上的参考</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Angle1Visible(this)"/></td>
+<td>做角 BLE 的角平分线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointNVisible(this)"/></td>
+<td>参考点 N 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Angle2Visible(this)"/></td>
+<td>做角 NLE 的角平分线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointQVisible(this)"/></td>
+<td>关键点 Q 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointRSVisible(this)"/></td>
+<td>交点 R 点和 S 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Line4Visible(this)"/></td>
+<td>过点 L 做 LQ 的垂线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointTVisible(this)"/></td>
+<td>参考点 T 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Angle3Visible(this)"/></td>
+<td>做角 TLQ 的角平分线</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="PointWVisible(this)"/></td>
+<td>关键点 W 点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Line5Visible(this)"/></td>
+<td>做以 BW 为直径的圆与 b 的交点 A1</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="TempCircleVisible(this)"/></td>
+<td>做以 A1 为圆心，过 Q 点的圆与线段 AB 的交点 B1</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Line6Visible(this)"/></td>
+<td>过点 B1 做线段 AB 的垂线，与外接圆的交点就是正十七边形顶点之一，与顶点 B 相隔两个顶点</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Circle17Visible(this)"/></td>
+<td>已经得到了两个顶点，基于二者，做 17 个圆</td>
+</tr>
+<tr>
+<td align="center"><input type="checkbox" class="mycheckbox" checked="checked" onclick="Poly17Visible(this)"/></td>
+<td>顺次连接，得到正十七边形</td>
+</tr>
+</tbody></table>
+<script type="text/javascript">
+    var brd = JXG.JSXGraph.initBoard('jxgbox', {boundingbox:[-11,11,13,-13], axis:false, grid:false, keepaspectratio: true, showCopyright:false});
+    /* 设置属性 */
+    brd.options.point.size = 2;
+    brd.options.point.color = 'blue';
+    brd.options.line.strokeColor = '#aaa';
+    brd.options.circle.strokeColor = '#aaa';
+    /* 基本框架 */
+    var A   = brd.create('point', [0,0], {name:'A'});
+    var B   = brd.create('point', [6,0], {name:'B'});
+    var a   = brd.create('line', [A,B], {straightFirst:false, straightLast:false});
+    var _a  = brd.create('circle', [A,B]);
+    var _b  = brd.create('circle', [B,A]);
+    var C   = brd.create('intersection', [_a,_b,0], {name:'C'});
+    var D   = brd.create('intersection', [_a,_b,1], {name:'D'});
+    var b   = brd.create('line', [C,D], {straightFirst:false, straightLast:false});
+    var E   = brd.create('intersection', [a,b], {name:'E'});
+    var _c  = brd.create('circle', [E,A]);
+    var F   = brd.create('intersection', [_c,b,0], {name:'F'});
+    /* 四等分点 */
+    var _d  = brd.create('circle', [F,E]);
+    var G   = brd.create('intersection', [_d,_c,0], {name:'G'});
+    var H   = brd.create('intersection', [_d,_c,1], {name:'H'});
+    var c   = brd.create('line', [G,H], {straightFirst:false, straightLast:false});
+    var I   = brd.create('intersection', [c,b], {name:'I'});
+    var _e  = brd.create('circle', [I,E]);
+    var _f  = brd.create('circle', [E,I]);
+    var J   = brd.create('intersection', [_e,_f,0], {name:'J'});
+    var K   = brd.create('intersection', [_e,_f,1], {name:'K'});
+    var d   = brd.create('line', [J,K], {straightFirst:false, straightLast:false});
+    var L   = brd.create('intersection', [d,b], {name:'L'});
+    /* 四等分角 */
+    var e   = brd.create('line', [L,B], {straightFirst:false, straightLast:false}); // 实际上用不到这条线
+    var _g  = brd.create('circle', [L,B]);
+    var M   = brd.create('intersection', [_g,b,1], {name:'M'});
+    var _h  = brd.create('circle', [M,B]);
+    var _i  = brd.create('circle', [B,M]);
+    var N   = brd.create('intersection', [_h,_i,0], {name:'N'});
+    var _j  = brd.create('circle', [L,N]);
+    var O   = brd.create('intersection', [_j,b,1], {name:'O'});
+    var _k  = brd.create('circle', [O,N]);
+    var _l  = brd.create('circle', [N,O]);
+    var P   = brd.create('intersection', [_k,_l,0], {name:'P'});
+    var f   = brd.create('line', [L,P], {straightLast:false});
+    var Q   = brd.create('intersection', [f,a], {name:'Q'});
+    /* 45度角 */
+    var R   = brd.create('intersection', [_g,f,0], {name:'R'});
+    var S   = brd.create('intersection', [_g,f,1], {name:'S'});
+    var _m  = brd.create('circle', [R,S]);
+    var _n  = brd.create('circle', [S,R]);
+    var T   = brd.create('intersection', [_m,_n,1], {name:'T'});
+    var _o  = brd.create('circle', [L,T]);
+    var U   = brd.create('intersection', [_o,f,0], {name:'U'});
+    var _p  = brd.create('circle', [T,U]);
+    var _q  = brd.create('circle', [U,T]);
+    var V   = brd.create('intersection', [_p,_q,0], {name:'V'});
+    var g   = brd.create('line', [L,V], {straightFirst:false, straightLast:false});
+    var W   = brd.create('intersection', [g,a], {name:'W'});
+    /* 第四个点 */
+    var _r  = brd.create('circle', [W,B]);
+    var _s  = brd.create('circle', [B,W]);
+    var X   = brd.create('intersection', [_r,_s,0], {name:'X'});
+    var Y   = brd.create('intersection', [_r,_s,1], {name:'Y'});
+    var h   = brd.create('line', [X,Y], {straightFirst:false, straightLast:false});
+    var Z   = brd.create('intersection', [h,a], {name:'Z'});
+    var _t  = brd.create('circle', [Z,W]);
+    var A1  = brd.create('intersection', [_t,b,0], {name:'A1'});
+    var _u  = brd.create('circle', [Q,A1]);
+    var B1  = brd.create('intersection', [_u,a,0], {name:'B1'});
+    var _v  = brd.create('circle', [B1,E]);
+    var C1  = brd.create('intersection', [_v,a,0], {name:'C1'});
+    var _w  = brd.create('circle', [C1,E]);
+    var _x  = brd.create('circle', [E,C1]);
+    var D1  = brd.create('intersection', [_w,_x,0], {name:'D1'});
+    var i   = brd.create('line', [B1,D1], {straightFirst:false});
+    var _P = [];
+    var _C = [];
+    _P[0] = brd.create('intersection', [i,_c,0], {name:'P0'});
+    _C[0] = brd.create('circle', [_P[0],B]);
+    /* 其他点 */
+    for(var idx = 1; idx < 17; idx++) {
+        _P[idx] = brd.create('intersection', [_C[idx-1],_c,0], {name:'P'+idx});
+        _C[idx] = brd.create('circle', [_P[idx],_P[idx-1]]);
+    }
+    /* 连线 */
+    _L = [];
+    for(var idx = 0; idx < 17; idx++) {
+        _L[idx] = brd.create('line', [_P[idx],_P[(idx+6)%17]], {straightFirst:false, straightLast:false});
+    }
+    // 所有线
+    function AllChecked(evt) {
+        Visible([A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,A1,B1,C1,D1] , evt.checked );
+        Visible([a,b,c,d,e,f,g,h,i] , evt.checked );
+        Visible([_a,_b,_c,_d,_e,_f,_g,_h,_i,_j,_k,_l,_m,_n,_o,_p,_q,_r,_s,_t,_u,_v,_w,_x] , evt.checked );
+        Visible(_C , evt.checked );
+        Visible(_P , evt.checked );
+        Visible(_L , evt.checked );
+        $('.mycheckbox').each( function () {
+            $(this).prop("checked", evt.checked);
+        });
+    }
+    // 线段AB
+    function LineABVisible(evt) {
+        Visible( [A,B,a] , evt.checked );
+    }
+    // 1号中垂线
+    function Line1Visible(evt) {
+        Visible( [_a,_b,C,D] , evt.checked );
+    }
+    // 关键点E点
+    function PointEVisible(evt) {
+        Visible( [b,E] , evt.checked );
+    }
+    // 外接圆
+    function CircumCircleVisible(evt) {
+        Visible([_c,F] , evt.checked );
+    }
+    // 2号中垂线
+    function Line2Visible(evt) {
+        Visible( [_d,G,H,c,I] , evt.checked );
+    }
+    // 3号中垂线
+    function Line3Visible(evt) {
+        Visible( [_e,_f,J,K,d] , evt.checked );
+    }
+    // 关键点L点
+    function PointLVisible(evt) {
+        Visible( [L] , evt.checked );
+    }
+    // 线段BL
+    function LineBLVisible(evt) {
+        Visible( [e] , evt.checked );
+    }
+    // 1号角平分线
+    function Angle1Visible(evt) {
+        Visible( [_g,M,_h,_i] , evt.checked );
+    }
+    // 参考点N点
+    function PointNVisible(evt) {
+        Visible( [N] , evt.checked );
+    }
+    // 2号角平分线
+    function Angle2Visible(evt) {
+        Visible( [_j,O,_k,_l,P,f] , evt.checked );
+    }
+    // 关键点Q点
+    function PointQVisible(evt) {
+        Visible( [Q] , evt.checked );
+    }
+    // 关键点R点、S点
+    function PointRSVisible(evt) {
+        Visible( [R,S] , evt.checked );
+    }
+    // 4号中垂线
+    function Line4Visible(evt) {
+        Visible( [_m,_n] , evt.checked );
+    }
+    // 参考点T点
+    function PointTVisible(evt) {
+        Visible( [T] , evt.checked );
+    }
+    // 3号角平分线
+    function Angle3Visible(evt) {
+        Visible( [_o,U,_p,_q,g,V] , evt.checked );
+    }
+    // 关键点W点
+    function PointWVisible(evt) {
+        Visible( [W] , evt.checked );
+    }
+    // 5号中垂线
+    function Line5Visible(evt) {
+        Visible( [_r,_s,X,Y,h,Z,_t,A1] , evt.checked );
+    }
+    // 做圆
+    function TempCircleVisible(evt) {
+        Visible( [_u,B1] , evt.checked );
+    }
+    // 6号中垂线
+    function Line6Visible(evt) {
+        Visible( [_v,C1,_w,_x,D1,i] , evt.checked );
+    }
+    // 17个圆弧
+    function Circle17Visible(evt) {
+        Visible(_P , evt.checked );
+        Visible(_C , evt.checked );
+    }
+    // 正17边形
+    function Poly17Visible(evt) {
+        Visible(_L , evt.checked );
+    }
+    // 是否可见
+    function Visible( element, flag ) {
+        if (flag) {
+            Show( element );
+        } else {
+            Hide( element );
+        }
+    }
+    // 隐藏元素
+    function Hide( element ) {
+        for(var idx = 0; idx < element.length; idx++) {
+           element[idx].hideElement();
+        }
+    }
+    // 显示元素
+    function Show( element ) {
+        for(var idx = 0; idx < element.length; idx++) {
+           element[idx].showElement();
+        }
+    }
+</script>
+<h1 id="源代码">源代码</h1>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* 初始化画板 */</span>
+<span class="hljs-keyword">var</span> brd = <span class="hljs-variable constant_">JXG</span>.<span class="hljs-property">JSXGraph</span>.<span class="hljs-title function_">initBoard</span>(<span class="hljs-string">&#x27;jxgbox&#x27;</span>, {<span class="hljs-attr">boundingbox</span>:[-<span class="hljs-number">11</span>,<span class="hljs-number">11</span>,<span class="hljs-number">13</span>,-<span class="hljs-number">13</span>], <span class="hljs-attr">axis</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">grid</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">keepaspectratio</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">showCopyright</span>:<span class="hljs-literal">false</span>});
+brd.<span class="hljs-property">options</span>.<span class="hljs-property">point</span>.<span class="hljs-property">size</span> = <span class="hljs-number">2</span>;
+brd.<span class="hljs-property">options</span>.<span class="hljs-property">point</span>.<span class="hljs-property">color</span> = <span class="hljs-string">&#x27;blue&#x27;</span>;
+brd.<span class="hljs-property">options</span>.<span class="hljs-property">line</span>.<span class="hljs-property">strokeColor</span> = <span class="hljs-string">&#x27;#aaa&#x27;</span>;
+brd.<span class="hljs-property">options</span>.<span class="hljs-property">circle</span>.<span class="hljs-property">strokeColor</span> = <span class="hljs-string">&#x27;#aaa&#x27;</span>;
+<span class="hljs-comment">/* 基本框架 */</span>
+<span class="hljs-keyword">var</span> A   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;point&#x27;</span>, [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;A&#x27;</span>});
+<span class="hljs-keyword">var</span> B   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;point&#x27;</span>, [<span class="hljs-number">6</span>,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;B&#x27;</span>});
+<span class="hljs-keyword">var</span> a   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [A,B], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> _a  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [A,B]);
+<span class="hljs-keyword">var</span> _b  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [B,A]);
+<span class="hljs-keyword">var</span> C   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_a,_b,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;C&#x27;</span>});
+<span class="hljs-keyword">var</span> D   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_a,_b,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;D&#x27;</span>});
+<span class="hljs-keyword">var</span> b   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [C,D], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> E   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [a,b], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;E&#x27;</span>});
+<span class="hljs-keyword">var</span> _c  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [E,A]);
+<span class="hljs-keyword">var</span> F   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_c,b,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;F&#x27;</span>});
+<span class="hljs-comment">/* 四等分点 */</span>
+<span class="hljs-keyword">var</span> _d  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [F,E]);
+<span class="hljs-keyword">var</span> G   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_d,_c,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;G&#x27;</span>});
+<span class="hljs-keyword">var</span> H   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_d,_c,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;H&#x27;</span>});
+<span class="hljs-keyword">var</span> c   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [G,H], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> I   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [c,b], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;I&#x27;</span>});
+<span class="hljs-keyword">var</span> _e  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [I,E]);
+<span class="hljs-keyword">var</span> _f  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [E,I]);
+<span class="hljs-keyword">var</span> J   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_e,_f,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;J&#x27;</span>});
+<span class="hljs-keyword">var</span> K   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_e,_f,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;K&#x27;</span>});
+<span class="hljs-keyword">var</span> d   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [J,K], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> L   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [d,b], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;L&#x27;</span>});
+<span class="hljs-comment">/* 四等分角 */</span>
+<span class="hljs-keyword">var</span> e   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [L,B], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>}); <span class="hljs-comment">// 实际上用不到这条线</span>
+<span class="hljs-keyword">var</span> _g  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [L,B]);
+<span class="hljs-keyword">var</span> M   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_g,b,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;M&#x27;</span>});
+<span class="hljs-keyword">var</span> _h  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [M,B]);
+<span class="hljs-keyword">var</span> _i  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [B,M]);
+<span class="hljs-keyword">var</span> N   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_h,_i,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;N&#x27;</span>});
+<span class="hljs-keyword">var</span> _j  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [L,N]);
+<span class="hljs-keyword">var</span> O   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_j,b,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;O&#x27;</span>});
+<span class="hljs-keyword">var</span> _k  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [O,N]);
+<span class="hljs-keyword">var</span> _l  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [N,O]);
+<span class="hljs-keyword">var</span> P   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_k,_l,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;P&#x27;</span>});
+<span class="hljs-keyword">var</span> f   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [L,P], {<span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> Q   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [f,a], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;Q&#x27;</span>});
+<span class="hljs-comment">/* 45度角 */</span>
+<span class="hljs-keyword">var</span> R   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_g,f,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;R&#x27;</span>});
+<span class="hljs-keyword">var</span> S   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_g,f,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;S&#x27;</span>});
+<span class="hljs-keyword">var</span> _m  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [R,S]);
+<span class="hljs-keyword">var</span> _n  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [S,R]);
+<span class="hljs-keyword">var</span> T   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_m,_n,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;T&#x27;</span>});
+<span class="hljs-keyword">var</span> _o  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [L,T]);
+<span class="hljs-keyword">var</span> U   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_o,f,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;U&#x27;</span>});
+<span class="hljs-keyword">var</span> _p  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [T,U]);
+<span class="hljs-keyword">var</span> _q  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [U,T]);
+<span class="hljs-keyword">var</span> V   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_p,_q,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;V&#x27;</span>});
+<span class="hljs-keyword">var</span> g   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [L,V], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> W   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [g,a], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;W&#x27;</span>});
+<span class="hljs-comment">/* 第四个顶点 */</span>
+<span class="hljs-keyword">var</span> _r  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [W,B]);
+<span class="hljs-keyword">var</span> _s  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [B,W]);
+<span class="hljs-keyword">var</span> X   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_r,_s,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;X&#x27;</span>});
+<span class="hljs-keyword">var</span> Y   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_r,_s,<span class="hljs-number">1</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;Y&#x27;</span>});
+<span class="hljs-keyword">var</span> h   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [X,Y], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> Z   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [h,a], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;Z&#x27;</span>});
+<span class="hljs-keyword">var</span> _t  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [Z,W]);
+<span class="hljs-keyword">var</span> <span class="hljs-variable constant_">A1</span>  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_t,b,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;A1&#x27;</span>});
+<span class="hljs-keyword">var</span> _u  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [Q,<span class="hljs-variable constant_">A1</span>]);
+<span class="hljs-keyword">var</span> <span class="hljs-variable constant_">B1</span>  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_u,a,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;B1&#x27;</span>});
+<span class="hljs-keyword">var</span> _v  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [<span class="hljs-variable constant_">B1</span>,E]);
+<span class="hljs-keyword">var</span> <span class="hljs-variable constant_">C1</span>  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_v,a,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;C1&#x27;</span>});
+<span class="hljs-keyword">var</span> _w  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [<span class="hljs-variable constant_">C1</span>,E]);
+<span class="hljs-keyword">var</span> _x  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [E,<span class="hljs-variable constant_">C1</span>]);
+<span class="hljs-keyword">var</span> <span class="hljs-variable constant_">D1</span>  = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_w,_x,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;D1&#x27;</span>});
+<span class="hljs-keyword">var</span> i   = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [<span class="hljs-variable constant_">B1</span>,<span class="hljs-variable constant_">D1</span>], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>});
+<span class="hljs-keyword">var</span> _P = [];
+<span class="hljs-keyword">var</span> _C = [];
+_P[<span class="hljs-number">0</span>] = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [i,_c,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;P0&#x27;</span>});
+_C[<span class="hljs-number">0</span>] = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [_P[<span class="hljs-number">0</span>],B]);
+<span class="hljs-comment">/* 其他点 */</span>
+<span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> idx = <span class="hljs-number">1</span>; idx &lt; <span class="hljs-number">17</span>; idx++) {
+    _P[idx] = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;intersection&#x27;</span>, [_C[idx-<span class="hljs-number">1</span>],_c,<span class="hljs-number">0</span>], {<span class="hljs-attr">name</span>:<span class="hljs-string">&#x27;P&#x27;</span>+idx});
+    _C[idx] = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;circle&#x27;</span>, [_P[idx],_P[idx-<span class="hljs-number">1</span>]]);
+}
+<span class="hljs-comment">/* 连线 */</span>
+_L = [];
+<span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> idx = <span class="hljs-number">0</span>; idx &lt; <span class="hljs-number">17</span>; idx++) {
+    _L[idx] = brd.<span class="hljs-title function_">create</span>(<span class="hljs-string">&#x27;line&#x27;</span>, [_P[idx],_P[(idx+<span class="hljs-number">6</span>)%<span class="hljs-number">17</span>]], {<span class="hljs-attr">straightFirst</span>:<span class="hljs-literal">false</span>, <span class="hljs-attr">straightLast</span>:<span class="hljs-literal">false</span>});
+}
+</code></pre>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>JSXGraph - 尺规作正十七边形</strong></p>
+                <p><a href="/post/JSXGraph - 尺规作正十七边形/">https://qingyayaya.github.io/post/JSXGraph - 尺规作正十七边形/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2021-10-17 20:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>

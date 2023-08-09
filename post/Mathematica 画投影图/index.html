@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>Mathematica 画投影图</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">Mathematica 画投影图</p>
+        <p class="date">2021-09-11 12:00:00</p>
+        
+        <div class="content">
+            <p>以前读论文，经常看到下面这样的三维轨道的投影图：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/Peng1.png" width="400"></center></p>
+<p style="color: #939393; text-align: center;">（作者：Peng Hao）</p>
+
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/Peng2.png" width="400"></center></p>
+<p style="color: #939393; text-align: center;">（作者：Peng Hao）</p>
+
+<p>把三维轨迹和三个平面投影结合起来，可以更加明了地展示轨道的立体结构，后来我也深受这种画图技巧的影响。但是，无论是 Mathematica 还是 MATLAB，目前主流的版本均没有提供直接画三维投影的内置函数。MATLAB 向来不在我们的讨论范围之内，这次我们讨论怎样用 Mathematica 画投影图。</p>
+<h1 id="官方给出的解决方案">官方给出的解决方案</h1>
+<p>在 Mathematica 帮助文档的搜索框输入一串鲜为人知的字符：<code>Compatibility/tutorial/Graphics/Graphics3D</code>，将进入一个<strong>兼容性信息</strong>页面，这个页面里面说明了很多<strong>特殊</strong>且<strong>很有实用价值</strong>的画图技巧：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/document1.png" width="500"></center></p>
+<p>在这个页面的<strong>最底端</strong>，有一个绘制投影图的示例：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/document2.png" width="500"></center></p>
+<p>这个示例就是官方给出的绘制投影图<strong>最好的解决方案</strong>，它适用于各种图形元素，包括点、线、曲面、实体等等，基本没有 bug。所以，画投影图首选这种方式。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/good.jpg" width="240"></center></p>
+<p>但是，每次画投影图都需要写这么长的代码，恐怕不是我们所希望的。而且，如果只想画出某些投影面，或者想令投影面偏移到特定的位置，此时如何进行设置也是很大的问题。</p>
+<h1 id="shadowfigure-扩展包">ShadowFigure 扩展包</h1>
+<p>根据上文的需求，我对官方提供的代码进行改造，并把它封装成一个函数，<a href="https://gitee.com/qingyaya/graphics3D">代码</a>已经在 Gitee 开源（原创的代码，欢迎 Star，欢迎 Fork）。</p>
+<p>ShadowFigure 包可以通过下面的命令一键导入：</p>
+<pre data-lang="mathematica"><code class="hljs language-mathematica"><span class="hljs-built_in">Get</span><span class="hljs-punctuation">[</span><span class="hljs-string">&quot;https://gitee.com/qingyaya/graphics3D/raw/master/ShadowFigure.m&quot;</span><span class="hljs-punctuation">]</span>
+</code></pre>
+<p>用 ShadowFigure 函数绘制一个立方体的投影图：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/snap1.png" width="500"></center></p>
+<p>ShadowFigure 函数可以指定以下属性：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>XShadow</td>
+<td>是否绘制 X 方向的投影</td>
+</tr>
+<tr>
+<td>YShadow</td>
+<td>是否绘制 Y 方向的投影</td>
+</tr>
+<tr>
+<td>ZShadow</td>
+<td>是否绘制 Z 方向的投影</td>
+</tr>
+<tr>
+<td>XShadowPosition</td>
+<td>X 方向投影的偏移量</td>
+</tr>
+<tr>
+<td>YShadowPosition</td>
+<td>Y 方向投影的偏移量</td>
+</tr>
+<tr>
+<td>ZShadowPosition</td>
+<td>Z 方向投影的偏移量</td>
+</tr>
+</tbody></table>
+<p>这样使用起来就方便多了。比如，不绘制 Z 方向的投影、并把 Y 方向投影的偏移量设为 3：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/snap2.png" width="500"></center></p>
+<p>画一下 Spikey 的投影：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/snap3.png" width="500"></center></p>
+<p>点和线也是可以的：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/snap4.png" width="500"></center></p>
+<p>多边形：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/snap5.png" width="500"></center></p>
+<p>这个函数还有很多不完美的地方，但是就以上几个例子来看，还是能满足一些简单的需求的。</p>
+<h1 id="graphics3d-扩展包">Graphics3D 扩展包</h1>
+<p>其实在 <strong>Mathematica 5.2</strong> 版本之前，画投影图是一件非常容易的事情，因为彼时 Graphics3D 扩展包还是内置的扩展包，只需运行：</p>
+<pre data-lang="mathematica"><code class="hljs language-mathematica"><span class="hljs-operator">&lt;&lt;</span> <span class="hljs-built_in">Graphics</span><span class="hljs-operator">`</span><span class="hljs-built_in">Graphics3D</span><span class="hljs-operator">`</span>
+</code></pre>
+<p>即可加载。包里有两个函数 <strong>Shadow</strong> 和 <strong>Project</strong>，专用于画投影图。不过，官方从 6.0 版本之后（10 多年前）开始信奉<em>去包化策略</em>，Graphics3D 扩展包被剔除。</p>
+<h2 id="下载">下载</h2>
+<p>在 <a href="http://library.wolfram.com/infocenter/MathSource/6766/">http://library.wolfram.com/infocenter/MathSource/6766/</a> 仍然可以下载到 Graphics3D 扩展包：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/document3.png" width="500"></center></p>
+<p>但是，高版本的 Mathematica 无法兼容这个包，如果强行导入，将引起一连串的报错，比如：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/warning.png" width="500"></center></p>
+<p>其中第一条错误就是：</p>
+<blockquote>
+<p>Graphics&#x60;Graphics3D&#x60; 已经过期. 正在加载的旧版本可能与目前的功能相冲突. </p>
+</blockquote>
+<h2 id="修复">修复</h2>
+<p>对于这个最近一次更新是在 2007 年的远古扩展包，里面有非常多的语法和函数不能和高版本的Mathematica 相兼容，是一件无可厚非的事情，而对其进行修复的主要任务也就是<strong>处理这些不兼容项</strong>。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/Holmes.jpg" width="150"></center></p>
+<p>经过仔细阅读提示信息，总结出不兼容项主要包括以下几类：</p>
+<blockquote>
+<ol>
+<li>提示 Graphics&#x60;Graphics3D&#x60; 已经过期</li>
+<li>Graphics&#x60;Common&#x60;GraphicsCommon&#x60;、Utilities&#x60;FilterOptions&#x60;、Statistics&#x60;DataManipulation&#x60; 等，这些所依赖的其他扩展包已经被高版本的 Mathematica 移除</li>
+<li>包里的 BarChart3D 和 Histogram3D 等函数被保护，也就是现在高版本的 Mathematica 已经将它们收为内置函数</li>
+</ol>
+</blockquote>
+<p>&gt;&gt; 对于第 1 条，可以不必关心。如果实在不想看到，不妨给它改个名字。</p>
+<p>&gt;&gt; 对于第 2 条，通读源代码，发现有无 Graphics&#x60;Common&#x60;GraphicsCommon&#x60; 和 Statistics&#x60;DataManipulation&#x60; 影响不大（经过实际测试，将其删除后，的确影响不大）。但是，Utilities&#x60;FilterOptions&#x60; 包里的 FilterOptions 函数被多次使用，所以轻易不能删去。不过，Utilities&#x60;FilterOptions&#x60; 包在 Mathematica 9.0 版本后被彻底删除，那么该怎么替换掉 FilterOptions 函数呢？找到了<a href="https://mathematica.stackexchange.com/questions/31426/summa-package-problem/99139#99139">解决方案</a>。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/lucky.jpg" width="150"></center></p>
+<p>只需要在包里增加下面这行代码即可：</p>
+<pre data-lang="mathematica"><code class="hljs language-mathematica"><span class="hljs-built_in">If</span><span class="hljs-punctuation">[</span><span class="hljs-built_in">$VersionNumber</span><span class="hljs-operator">&gt;=</span><span class="hljs-number">9</span><span class="hljs-operator">,</span><span class="hljs-built_in">Graphics</span><span class="hljs-operator">`</span><span class="hljs-built_in">Graphics3D</span><span class="hljs-operator">`</span><span class="hljs-variable">Private</span><span class="hljs-operator">`</span><span class="hljs-variable">FilterOptions</span><span class="hljs-punctuation">[</span><span class="hljs-type">a_</span><span class="hljs-operator">,</span><span class="hljs-type">b___</span><span class="hljs-punctuation">]</span><span class="hljs-operator">:=</span><span class="hljs-built_in">Sequence</span><span class="hljs-operator">@@</span><span class="hljs-built_in">FilterRules</span><span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span><span class="hljs-variable">b</span><span class="hljs-punctuation">}</span><span class="hljs-operator">,</span><span class="hljs-built_in">Options</span><span class="hljs-punctuation">[</span><span class="hljs-variable">a</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">]</span><span class="hljs-operator">;</span>
+</code></pre>
+<p>&gt;&gt; 对于第 3 条，可以直接把包里的 BarChart3D 和 Histogram3D 等函数删除，因为它们已经成为内置函数。</p>
+<p>到此为止，已经完成了修复。除了 <strong>Shadow</strong> 和 <strong>Project</strong> 函数，修复后的包里还包含一些其他的函数：</p>
+<table>
+<thead>
+<tr>
+<th align="left">名称</th>
+<th align="center">保留</th>
+<th align="center">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">ScatterPlot3D</td>
+<td align="center">✓</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">ShadowPlot3D</td>
+<td align="center">✓</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">ListShadowPlot3D</td>
+<td align="center">✓</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">Project</td>
+<td align="center">✓</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">Shadow</td>
+<td align="center">✓</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">TransformGraphcs3D</td>
+<td align="center">✓</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">SkewGraphics3D</td>
+<td align="center">✓</td>
+<td align="center">有 Bug</td>
+</tr>
+<tr>
+<td align="left">StackGraphics</td>
+<td align="center">✓</td>
+<td align="center">有 Bug</td>
+</tr>
+<tr>
+<td align="left">Histogram3D</td>
+<td align="center">✗</td>
+<td align="center">已内置</td>
+</tr>
+<tr>
+<td align="left">BarChart3D</td>
+<td align="center">✗</td>
+<td align="center">已内置</td>
+</tr>
+<tr>
+<td align="left">ListSurfacePlot3D</td>
+<td align="center">✗</td>
+<td align="center">已内置</td>
+</tr>
+</tbody></table>
+<h2 id="使用">使用</h2>
+<p>修复后的 Graphics3D 扩展包的代码已经在 Gitee 开源（和上文的 ShadowFigure 放在同一个仓库里），通过下面的命令可以一键导入：</p>
+<pre data-lang="mathematica"><code class="hljs language-mathematica"><span class="hljs-built_in">Get</span><span class="hljs-punctuation">[</span><span class="hljs-string">&quot;https://gitee.com/qingyaya/graphics3D/raw/master/Graphics3D.m&quot;</span><span class="hljs-punctuation">]</span>
+</code></pre>
+<p>运行上面的代码会报一个错误，即依然会提示 Graphics&#x60;Graphics3D&#x60; 已经过期，前面已经说过了，不用管它，如果实在不想看到，不妨给它改个名字。</p>
+<p>导入之后，看 Shadow 函数的一个示例：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/snap6.png" width="500"></center></p>
+<h2 id="不足">不足</h2>
+<p>通过在修复的过程中阅读源代码，我发现这个包被官方抛弃，是有原因的，因为源代码的思想已经较为落后。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/dislike.jpg" width="100"></center></p>
+<p>它可以支持 Point、Line、Polygon、Cuboid 等元素，但是不支持 Sphere、Ellipsoid、Cylinder 等元素，因为源代码是先匹配元素的种类，再根据每种元素的特点，对其投影单独进行处理。比如，对 Line 有一套投影算法，对 Cuboid 又是另一套投影算法，这就导致通用性和兼容性非常差。再比如，源代码根本没有考虑到 Ellipsoid 这种元素（事实上，Ellipsoid 是 2014 年 Mathematica 10.0 版本引入的，而 Graphics3D 扩展包在 2007 年停止维护），自然没法画出它的投影。</p>
+<p>相比之下，官方最新给出的解决方案使用的是 Scale 函数进行投影，Scale 函数对所有元素具有通用性，因此这才是比较好的解决方案。所以，从现实的角度出发，非常不提倡去维护一个数字形式的老古董，否则就是自寻烦恼。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post07/assets/bug.jpg" width="150"></center></p>
+<h1 id="结尾">结尾</h1>
+<p>对于用 Mathematica 画投影图的问题，给出了 <strong>ShadowFigure 扩展包</strong>和<strong>修复后的 Graphics3D 扩展包</strong>，更推荐使用 ShadowFigure 扩展包。</p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>Mathematica 画投影图</strong></p>
+                <p><a href="/post/Mathematica 画投影图/">https://qingyayaya.github.io/post/Mathematica 画投影图/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2021-09-11 12:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>

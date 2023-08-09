@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>重新编译 mice</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">重新编译 mice</p>
+        <p class="date">2021-11-01 20:00:00</p>
+        
+        <div class="content">
+            <p>今天聊聊 MATLAB。<del>咦，MATLAB 一直不都是调侃的对象吗，怎么成主角了？</del>No No No，所谓“圣人无常师”，只有小学生才会争论语言的高低贵贱，成年人都是驾驭自如为我所用的。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post13/assets/pupil.jpg" width="150"></center></p>
+<div class="ad-tip"><p>本教程只针对 Microsoft Windows 10 操作系统！</p>
+</div><h1 id="什么是mice">什么是mice</h1>
+<p>mice 是 MATLAB 版本的 SPICE Toolkit。SPICE Toolkit 享有盛名，这里不再赘述，想要了解更多，请移步其<a href="https://naif.jpl.nasa.gov/naif/index.html">官方网站</a>。</p>
+<h1 id="为什么要重新编译-mice">为什么要重新编译 mice</h1>
+<p>我曾经写过一个软件，其中一些核心功能依赖于 mice，但是目前 mice（N0066 版本，released April 10, 2017）尚未完全把 SPICE Toolkit 的所有功能适配到 MATLAB。比如没有提供<code>cspice_spkw09</code>函数，但是这个函数却非常有用。</p>
+<p>显然不能坐等官方团队在下一个版本进行适配，应该主动对 mice 进行定制，按照自己的需求增加功能，最后重新编译 mice。只有这样，以后才能更好地、可持续地利用 mice。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post13/assets/xiaowanzi.jpg" width="240"></center></p>
+<h1 id="下载-mice">下载 mice</h1>
+<p>在官网下载<a href="https://naif.jpl.nasa.gov/pub/naif/toolkit//MATLAB/PC_Windows_VisualC_MATLAB8.x_64bit/packages/mice.zip"><code>mice.zip</code></a>（需要科学上网），解压。文件结构为：</p>
+<pre><code>(installation directory)
+         |
+         mice(下文中记作&lt;mice&gt;)
+            |
+            data
+            ...
+            include
+            lib
+            src
+               |
+               brief_c
+               ...
+               spacit_c
+               cspice
+               csupport
+               mice
+               micecook
+</code></pre>
+<h1 id="实现cspice_spkw09函数">实现<code>cspice_spkw09</code>函数</h1>
+<p>以<code>cspice_spkw09</code>函数为例，介绍如何实现自己的需求。把以下代码写入<code>&lt;mice&gt;\src\mice\mice.c</code>的适当位置：</p>
+<pre data-lang="c"><code class="hljs language-c"><span class="hljs-comment">/*
+   void spkw09_c ( SpiceInt             handle,
+                   SpiceInt             body,
+                   SpiceInt             center, 
+                   ConstSpiceChar     * frame,
+                   SpiceDouble          first,
+                   SpiceDouble          last,
+                   ConstSpiceChar     * segid,
+                   SpiceInt             degree,
+                   SpiceInt             n,
+                   ConstSpiceDouble     states[][6],
+                   ConstSpiceDouble     epochs[]     )
+*/</span>
+<span class="hljs-type">void</span> <span class="hljs-title function_">cspice_spkw09</span><span class="hljs-params">(<span class="hljs-type">int</span> nlhs, mxArray *plhs[], <span class="hljs-type">int</span> nrhs, <span class="hljs-type">const</span> mxArray *prhs[])</span>
+{
+
+   SpiceInt             handle;
+   SpiceInt             body;
+   SpiceInt             center;
+   SpiceChar            frame   [DEFAULT_STR_LENGTH+<span class="hljs-number">1</span>];
+   SpiceDouble          first;
+   SpiceDouble          last;
+   SpiceChar            segid   [DEFAULT_STR_LENGTH+<span class="hljs-number">1</span>];
+   SpiceInt             degree;
+   SpiceInt             n;
+   ConstSpiceDouble   * states;
+   ConstSpiceDouble   * epochs;
+
+   <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">extra_dims</span>  * <span class="hljs-title">extra</span>;</span>
+   <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">argcheck</span> <span class="hljs-title">ArgCheck</span>[] =</span>
+      {
+      { <span class="hljs-string">&quot;handle&quot;</span>,  MiceInt,    <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;body&quot;</span>,    MiceInt,    <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;center&quot;</span>,  MiceInt,    <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;frame&quot;</span>,   MiceChar,   <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;first&quot;</span>,   MiceDouble, <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;last&quot;</span>,    MiceDouble, <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;segid&quot;</span>,   MiceChar,   <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;degree&quot;</span>,  MiceInt,    <span class="hljs-number">0</span>, { <span class="hljs-number">0</span> },    <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;states&quot;</span>,  MiceDouble, <span class="hljs-number">2</span>, { <span class="hljs-number">6</span>, <span class="hljs-number">0</span> }, <span class="hljs-number">0</span>},
+      { <span class="hljs-string">&quot;epochs&quot;</span>,  MiceDouble, <span class="hljs-number">2</span>, { <span class="hljs-number">1</span>, <span class="hljs-number">0</span> }, <span class="hljs-number">0</span>},
+      };
+
+   check_arg_num( nrhs, nlhs, <span class="hljs-number">10</span>, <span class="hljs-number">0</span>);
+
+   extra = mice_checkargs(nlhs,plhs,nrhs,prhs,ArgCheck);
+
+   <span class="hljs-comment">/*
+   Number of state sets = number of elements in array divided by six;
+   we expect a 6xN array.
+   */</span>
+   n = mxGetNumberOfElements( prhs[<span class="hljs-number">9</span>]) / <span class="hljs-number">6</span>;
+
+   handle  = S_INT_ARGV(<span class="hljs-number">1</span>);
+   body    = S_INT_ARGV(<span class="hljs-number">2</span>);
+   center  = S_INT_ARGV(<span class="hljs-number">3</span>);
+
+   mxGetString(prhs[<span class="hljs-number">4</span>], frame, DEFAULT_STR_LENGTH);
+
+   first   = S_DBL_ARGV(<span class="hljs-number">5</span>);
+   last    = S_DBL_ARGV(<span class="hljs-number">6</span>);
+
+   mxGetString(prhs[<span class="hljs-number">7</span>], segid, DEFAULT_STR_LENGTH);
+
+   degree  = S_INT_ARGV(<span class="hljs-number">8</span>);
+
+   states  = (ConstSpiceDouble*)mxGetData(prhs[<span class="hljs-number">9</span>]);
+   epochs  = (ConstSpiceDouble*)mxGetData(prhs[<span class="hljs-number">10</span>]);
+
+   spkw09_c ( handle,
+              body,
+              center,
+              frame,
+              first,
+              last,
+              segid,
+              degree,
+              n,
+              (Nx6d)states,
+              (ConstSpiceDouble(*)[<span class="hljs-number">1</span>]) epochs );
+
+   CHECK_CALL_FAILURE( SCALAR );
+
+}
+</code></pre>
+<h1 id="编译micemexw64的步骤">编译<code>mice.mexw64</code>的步骤</h1>
+<p>正式编译之前，请注意：</p>
+<div class="ad-tip"><p>cspice源代码没有使用<code>mwSize</code>，而是使用<code>int</code>，因此鲁棒性很差，编译时必须采用<code>-compatibleArrayDims</code>模式</p>
+<p>SPICE Toolkit version is <strong>N0066</strong>。测试环境为 MATLAB <strong>2020b</strong> 和 Microsoft Visual Studio <strong>14.0</strong></p>
+</div><hr>
+<ol>
+<li>在<code>&lt;mice&gt;\src\mice\mice.c</code>靠近头部的位置，添加以下代码：</li>
+</ol>
+<pre data-lang="c"><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">if</span> _MSC_VER&gt;=1900  </span>
+_ACRTIMP_ALT FILE* __cdecl __acrt_iob_func(<span class="hljs-type">unsigned</span>);
+<span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> __cplusplus   </span>
+<span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span>
+<span class="hljs-meta">#<span class="hljs-keyword">endif</span>   </span>
+FILE* __cdecl __iob_func(<span class="hljs-type">unsigned</span> i) {
+    <span class="hljs-keyword">return</span> __acrt_iob_func(i);
+}
+<span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
+</code></pre>
+<p>为什么要加这行代码？解释：</p>
+<blockquote>
+<p>因为不同版本的 VS 对<code>stdin</code>, <code>stdout</code>, <code>stderr</code>的定义不同（参见<code>C:\Program Files (x86)\Windows Kits\10\Include\10.0.10150.0\ucrt\corecrt_wstdio.h</code>文件）</p>
+</blockquote>
+<div class="ad-tip"><p>在此之后，有<strong>两种方案</strong>可供选择</p>
+</div><hr>
+<p>第一种方案，使用官方提供的<code>cspice.lib</code>库文件，位于<code>&lt;mice&gt;\lib\</code>路径下（<u>省时，推荐</u>）</p>
+<ol start="2">
+<li>在MATLAB，把以下代码保存成<code>MakeProductWithCSPICELIB.m</code>脚本，并运行</li>
+</ol>
+<pre data-lang="matlab"><code class="hljs language-matlab"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MakeProductWithCSPICELIB</span><span class="hljs-params">()</span></span>
+
+<span class="hljs-comment">% mice文件夹的路径（根据具体情况更改）</span>
+MICE_PATH = fileparts( mfilename(<span class="hljs-string">&#x27;fullpath&#x27;</span>) );
+
+<span class="hljs-comment">% 64位libcmt.lib库的路径（根据具体情况更改）</span>
+LIBCMT_PATH = <span class="hljs-string">&#x27;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib\amd64\&#x27;</span>;
+
+<span class="hljs-comment">% 跳转到</span>
+cd( MICE_PATH );
+
+<span class="hljs-comment">% 正式编译</span>
+mex(<span class="hljs-string">&#x27;-compatibleArrayDims&#x27;</span>,...
+    <span class="hljs-string">&#x27;-output&#x27;</span> , <span class="hljs-string">&#x27;..\..\lib\mice&#x27;</span>,...   <span class="hljs-comment">% 定义输出的路径和文件名</span>
+    <span class="hljs-string">&#x27;-I..\..\include&#x27;</span>,...              <span class="hljs-comment">% 头文件的路径中</span>
+    <span class="hljs-string">&#x27;mice.c&#x27;</span>,...
+    <span class="hljs-string">&#x27;zzmice.c&#x27;</span>,...
+    <span class="hljs-string">&#x27;zzmice_CreateIntScalar.c&#x27;</span>,...
+    <span class="hljs-string">&#x27;..\..\lib\cspice.lib&#x27;</span>,...         <span class="hljs-comment">% lib</span>
+    [LIBCMT_PATH,<span class="hljs-string">&#x27;libcmt.lib&#x27;</span>] );      <span class="hljs-comment">% lib</span>
+
+<span class="hljs-keyword">end</span>
+</code></pre>
+<p><strong>注意事项如下，请务必认真阅读：</strong></p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post13/assets/document.jpg" width="200"></center></p>
+<blockquote>
+<ol>
+<li>测试环境为 MATLAB <strong>2020b</strong> 和 Microsoft Visual Studio <strong>14.0</strong></li>
+<li>脚本应放置在<code>&lt;mice&gt;\src\mice\</code>路径中，即与<code>mice.c</code>同一路径</li>
+<li>编译时引用了<code>&lt;mice&gt;\include\</code>路径中的头文件，请勿随意修改该文件夹下的文件</li>
+<li>编译时需要<code>cspice.lib</code>库，请确保该文件存在于<code>&lt;mice&gt;\lib\</code>路径中</li>
+<li>编译时需要<code>libcmt.lib</code>库，该库文件由 VS 提供，请确认该库文件的具体路径，并对脚本中的 LIBCMT_PATH 变量及时做出修正</li>
+<li>编译后生成的文件为<code>mice.mexw64</code>，位于<code>&lt;mice&gt;\lib\</code>路径中，如果编译前该路径中已经存在<code>mice.mexw64</code>文件，会不提醒地将其覆盖，所以最好备份</li>
+</ol>
+</blockquote>
+<hr>
+<p>第二种方案，不使用官方提供的<code>cspice.lib</code>，自己编译源代码（<u>不省时，易出错，不推荐</u>）</p>
+<ol start="2">
+<li>编译<code>vcf2c.lib</code>，具体步骤请参阅后文。编译后，把库文件放置在<code>&lt;mice&gt;\lib\</code>路径中。因为 cspice 源代码广泛使用 f2c 工具，因此依赖该库</li>
+<li><code>&lt;mice&gt;\include\</code>缺少<code>unistd.h</code>头文件，请补充，其源代码如下：</li>
+</ol>
+<pre data-lang="c"><code class="hljs language-c"><span class="hljs-comment">/* This file is part of the Mingw32 package.
+    unistd.h maps (roughly) to io.h
+*/</span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> _UNISTD_H</span>
+<span class="hljs-meta">#<span class="hljs-keyword">define</span> _UNISTD_H</span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;io.h&gt;</span></span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
+</code></pre>
+<ol start="4">
+<li>下载<code>list.txt</code>文件，链接<code>https://gitee.com/openmdt/mice-compile/raw/master/list.txt</code>，放到<code>&lt;mice&gt;\src\mice\</code>路径下。该文件列举了编译所需的<code>.c</code>源文件（是我一个一个试出来的，<strong>缺一不可</strong>）</li>
+<li>在 MATLAB，把以下代码保存成<code>MakeProductWithoutCSPICELIB.m</code>脚本，并运行</li>
+</ol>
+<pre data-lang="matlab"><code class="hljs language-matlab"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MakeProductWithoutCSPICELIB</span><span class="hljs-params">()</span></span>
+
+<span class="hljs-comment">% mice文件夹的路径（根据具体情况更改）</span>
+MICE_PATH = fileparts( mfilename(<span class="hljs-string">&#x27;fullpath&#x27;</span>) );
+
+<span class="hljs-comment">% 跳转到</span>
+cd( MICE_PATH );
+
+<span class="hljs-comment">% 打开list.txt</span>
+fid = fopen(<span class="hljs-string">&#x27;list.txt&#x27;</span>,<span class="hljs-string">&#x27;r&#x27;</span>);
+
+<span class="hljs-comment">% 找到编译所需的.c源文件</span>
+p = <span class="hljs-string">&#x27;..\cspice\&#x27;</span>;
+k = <span class="hljs-number">1</span>;
+<span class="hljs-keyword">while</span> ~feof(fid)
+    temp = fgetl(fid);
+    list{k} = [p , temp];
+    k = k + <span class="hljs-number">1</span>;
+<span class="hljs-keyword">end</span>
+fclose(fid);
+
+<span class="hljs-comment">% 正式编译</span>
+mex(<span class="hljs-string">&#x27;-compatibleArrayDims&#x27;</span>,...
+    <span class="hljs-string">&#x27;-output&#x27;</span> , <span class="hljs-string">&#x27;..\..\lib\mice&#x27;</span>,...   <span class="hljs-comment">% 定义输出的路径和文件名</span>
+    <span class="hljs-string">&#x27;-I..\..\include&#x27;</span>,...              <span class="hljs-comment">% 头文件的路径中</span>
+    <span class="hljs-string">&#x27;..\..\lib\vcf2c.lib&#x27;</span>,...
+    <span class="hljs-string">&#x27;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib\amd64\libcmt.lib&#x27;</span>,...
+    <span class="hljs-string">&#x27;mice.c&#x27;</span>,...
+    <span class="hljs-string">&#x27;zzmice.c&#x27;</span>,...
+    <span class="hljs-string">&#x27;zzmice_CreateIntScalar.c&#x27;</span>,...
+    list{:} );
+
+<span class="hljs-keyword">end</span>
+</code></pre>
+<p><strong>注意事项如下，请务必认真阅读：</strong></p>
+<blockquote>
+<ol>
+<li>测试环境为 MATLAB <strong>2020b</strong> 和 Microsoft Visual Studio <strong>14.0</strong></li>
+<li>脚本应放置在<code>&lt;mice&gt;\src\mice\</code>路径中，即与<code>mice.c</code>同一路径</li>
+<li>编译时引用了<code>&lt;mice&gt;\include\</code>路径中的头文件，请勿随意修改该文件夹下的文件</li>
+<li>编译时需要<code>libcmt.lib</code>库，该库文件由 VS 提供，请确认该库文件的具体路径，并对脚本中的 LIBCMT_PATH 变量及时做出修正</li>
+<li>编译时需要<code>vcf2c.lib</code>库，请确保已经按照相关步骤编译出该文件</li>
+<li>编译后生成的文件为<code>mice.mexw64</code>，位于<code>&lt;mice&gt;\lib\</code>路径中，如果编译前该路径中已经存在<code>mice.mexw64</code>文件，会不提醒地将其覆盖，所以最好备份</li>
+</ol>
+</blockquote>
+<hr>
+<div class="ad-warning"><p>最后，即使按照以上步骤做了，也不一定能成功，比较依赖编译环境。但是，在 MATLAB <strong>2020b</strong> 和 Microsoft Visual Studio <strong>14.0</strong> 环境下，经测试，没有问题。<strong>如果没成功，请不要迁怒于任何一个工具</strong>，它们都是相当优秀的。</p>
+</div><p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post13/assets/girl.jpg" width="150"></center></p>
+<h1 id="编译vcf2clib的步骤">编译<code>vcf2c.lib</code>的步骤</h1>
+<p>备注：</p>
+<blockquote>
+<p>测试环境为 Microsoft Visual Studio <strong>14.0</strong>。下文中的路径根据 VS 的具体安装位置灵活调整</p>
+</blockquote>
+<p>具体步骤：</p>
+<ol>
+<li>在 <a href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post13/assets/www.netlib.org/f2c/">www.netlib.org/f2c/</a> 下载<code>libf2c.zip</code>压缩包，并解压到<code>&lt;path&gt;\libf2c\</code>路径</li>
+<li>在“此电脑”右击，选择“属性”，选择“高级系统设置”，点击“环境变量”</li>
+<li>在“系统变量”面板上，点击“新建”，“变量名”填写<code>INCLUDE</code>，“变量值”填写<code>C:\Program Files (x86)\Windows Kits\10\Include\10.0.10150.0\ucrt;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include</code></li>
+<li>在“系统变量”面板上，点击“新建”，“变量名”填写<code>LIB</code>，“变量值”填写<code>C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib\amd64;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10150.0\ucrt\x64</code></li>
+<li>在“系统变量”面板上，点击“新建”，“变量名”填写<code>Path</code>，“变量值”填写<code>C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64</code></li>
+<li>可以在<code>C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64</code>路径下找到 64 位<code>nmake.exe</code></li>
+<li>运行 cmd.exe，输入要到达的盘，比如<code>D:</code>，再输入<code>CD &lt;path&gt;\libf2c\</code></li>
+<li>接着输入<code>nmake -f makefile.vc</code></li>
+<li>完成</li>
+<li>如果计算机装有 Mathematica，不妨去<code>&lt;Mathematica安装路径&gt;\SystemFiles\Components\WSMCore\lib\win64\VS2013</code>路径下，看看能否找到<code>f2c.lib</code>，这就是我们想要的库文件，Mathematica 已经帮我们编译好了，亲测可用</li>
+</ol>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post13/assets/bed.gif" width="340"></center></p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>重新编译 mice</strong></p>
+                <p><a href="/post/重新编译 mice/">https://qingyayaya.github.io/post/重新编译 mice/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2021-11-01 20:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>

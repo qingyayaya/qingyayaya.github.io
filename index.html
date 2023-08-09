@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>青崖同学</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <style type="text/css">
+        /* navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.85);
+            border-color: var(--border-color);
+            border-style: solid;
+            border-width: 0 0 1px;
+            padding: 0 10px;
+        }
+
+        nav a:hover {
+            text-decoration: none;
+        }
+
+        #navbar-left {
+            float: left !important;
+            align-items: stretch;
+            display: flex;
+        }
+
+        #navbar-left a {
+            display: flex;
+            align-items: center;
+            padding: 0.46rem;
+        }
+
+        #navbar-logo {
+            height: 2.5rem;
+            max-height: 2.5rem;
+        }
+
+        #navbar-right {
+            float: right !important;
+            align-items: stretch;
+            display: flex;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        #navbar-right a {
+            display: flex;
+            align-items: center;
+            padding: 1.05rem 0.75rem;
+            margin: 0 0;
+            color: black;
+        }
+
+        #navbar-right a:hover {
+            background: var(--blue-color);
+            color: white;
+        }
+
+        /* achieve */
+        .achieve {
+            margin: 70px 10px 20px 10px;
+            padding-left: 0;
+        }
+
+        .achieve-item {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+            margin-bottom: -1px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            line-height: 1;
+        }
+
+        .achieve-item:hover {
+            background-color: var(--gray-bg-color);
+        }
+
+        .achieve-item:first-child {
+            border-top-right-radius: 4px;
+            border-top-left-radius: 4px;
+        }
+
+        .achieve-item:last-child {
+            margin-bottom: 0;
+            border-bottom-right-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .achieve-item .info {
+            padding: 15px 20px;
+        }
+
+        .achieve-item .cover {
+            font-size: 0;
+            border-left: 1px solid var(--border-color);
+            min-width: 166.25px;
+        }
+
+        .achieve-item .info .date {
+            font-size: 80%;
+            color: darkgray;
+            margin-bottom: 0.7rem;
+        }
+
+        .achieve-item .info a {
+            display: block;
+        }
+
+        .achieve-item .cover img {
+            height: 70px;
+        }
+
+        /* motto at the bottom */
+        .motto {
+            text-align: center;
+            font-size: 80%;
+            letter-spacing: 0.1rem;
+            color: lightgrey;
+            position: relative;
+            margin: 20px 0 30px 0;
+        }
+
+        .motto::before,
+        .motto::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            width: 60px;
+            height: 0.4px;
+            left: 50%;
+            background-color: lightgrey;
+        }
+
+        .motto::before {
+            margin-left: -120px;
+        }
+
+        .motto::after {
+            margin-left: 60px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div id="navbar-left">
+            <a href="/" target="_blank"><img id="navbar-logo" src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/og_image.svg" alt="青崖同学"></a>
+        </div>
+        <div id="navbar-right">
+            
+            <a href="/book" target="_blank">Book</a>
+            
+            <a href="/game" target="_blank">Game</a>
+            
+            <a href="/link" target="_blank">Link</a>
+            
+            <a href="/about" target="_blank">About</a>
+            
+        </div>
+    </nav>
+    <ul class="achieve">
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2023-08-08 14:00:00</div>
+                <a href="/post/在 iPadOS 上使用 git/" target="_blank">在 iPadOS 上使用 git</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover32.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2023-07-24 14:00:00</div>
+                <a href="/post/Word 插入 LaTeX 公式/" target="_blank">Word 插入 LaTeX 公式</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover31.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2023-05-05 14:00:00</div>
+                <a href="/post/把 C 程序跑在浏览器上/" target="_blank">把 C 程序跑在浏览器上</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover30.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2023-01-10 18:00:00</div>
+                <a href="/post/SpiceyPy 和 mice 的一些差异/" target="_blank">SpiceyPy 和 mice 的一些差异</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover29.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2023-01-02 20:00:00</div>
+                <a href="/post/单项式的排序问题与朱世杰恒等式/" target="_blank">单项式的排序问题与朱世杰恒等式</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover28.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-11-09 10:00:00</div>
+                <a href="/post/Python 调用 C 语言动态链接库/" target="_blank">Python 调用 C 语言动态链接库</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover27.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-11-08 18:00:00</div>
+                <a href="/post/西班牙留学签证申请全过程/" target="_blank">西班牙留学签证申请全过程</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover26.jpg"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-06-24 18:00:00</div>
+                <a href="/post/绘制谢尔宾斯基三角形的 3 种方法/" target="_blank">绘制谢尔宾斯基三角形的 3 种方法</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover25.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-05-14 09:40:00</div>
+                <a href="/post/Mathematica 数学动图欣赏（二）/" target="_blank">Mathematica 数学动图欣赏（二）</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover24.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-05-06 17:00:00</div>
+                <a href="/post/开发一个极简静态博客生成器/" target="_blank">开发一个极简静态博客生成器</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover23.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-05-01 17:00:00</div>
+                <a href="/post/【游戏安利】星辰遗迹/" target="_blank">【游戏安利】星辰遗迹</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover22.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-03-29 16:00:00</div>
+                <a href="/post/时隔 5 年，SPICE 工具箱迎来更新/" target="_blank">时隔 5 年，SPICE 工具箱迎来更新</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover21.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-03-28 17:00:00</div>
+                <a href="/post/基于 marked.js 定制一个 Markdown 解析器/" target="_blank">基于 marked.js 定制一个 Markdown 解析器</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover20.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-03-27 17:00:00</div>
+                <a href="/post/捡到一张 3070，来坎巴拉捏一条 Halo 轨道/" target="_blank">捡到一张 3070，来坎巴拉捏一条 Halo 轨道</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover19.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-03-26 20:00:00</div>
+                <a href="/post/限制性三体问题的势能为何多出一个常数项？/" target="_blank">限制性三体问题的势能为何多出一个常数项？</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover18.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-03-10 19:00:00</div>
+                <a href="/post/MathJax 服务端渲染 LaTeX/" target="_blank">MathJax 服务端渲染 LaTeX</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover17.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-03-09 18:00:00</div>
+                <a href="/post/Lissajous 轨道如何施加脉冲来规避日食？/" target="_blank">Lissajous 轨道如何施加脉冲来规避日食？</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover16.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2022-01-23 19:00:00</div>
+                <a href="/post/【游戏安利】The Witness 之解谜篇/" target="_blank">【游戏安利】The Witness 之解谜篇</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover15.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-12-01 12:00:00</div>
+                <a href="/post/浅谈单叶双曲面/" target="_blank">浅谈单叶双曲面</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover14.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-11-01 20:00:00</div>
+                <a href="/post/重新编译 mice/" target="_blank">重新编译 mice</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover13.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-10-17 20:00:00</div>
+                <a href="/post/JSXGraph - 尺规作正十七边形/" target="_blank">JSXGraph - 尺规作正十七边形</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover12.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-10-17 18:00:00</div>
+                <a href="/post/JSXGraph - 前端交互式几何库/" target="_blank">JSXGraph - 前端交互式几何库</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover11.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-10-01 19:30:00</div>
+                <a href="/post/Quasi-Halo 轨道，拿来吧你/" target="_blank">Quasi-Halo 轨道，拿来吧你</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover10.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-09-25 12:00:00</div>
+                <a href="/post/常值连续推力下航天器的运动/" target="_blank">常值连续推力下航天器的运动</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover9.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-09-19 12:00:00</div>
+                <a href="/post/Mercator 投影/" target="_blank">Mercator 投影</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover8.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-09-11 12:00:00</div>
+                <a href="/post/Mathematica 画投影图/" target="_blank">Mathematica 画投影图</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover7.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-08-27 12:00:00</div>
+                <a href="/post/青崖同学个人博客上线啦/" target="_blank">青崖同学个人博客上线啦</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover6.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-08-07 19:03:00</div>
+                <a href="/post/如何优雅地不定积分/" target="_blank">如何优雅地不定积分</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover5.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-08-02 22:08:00</div>
+                <a href="/post/MaTeX 与 LaTeX/" target="_blank">MaTeX 与 LaTeX</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover4.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-08-01 16:40:00</div>
+                <a href="/post/Mathematica 数学动图欣赏（一）/" target="_blank">Mathematica 数学动图欣赏（一）</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover3.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-07-17 08:34:00</div>
+                <a href="/post/心形线与曼德勃罗集/" target="_blank">心形线与曼德勃罗集</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover2.png"/>
+            </div>
+            
+        </li>
+        
+        <li class="achieve-item">
+            <div class="info">
+                <div class="date">2021-07-15 17:51:00</div>
+                <a href="/post/从 ln(1+x) 的连分式展开谈起/" target="_blank">从 ln(1+x) 的连分式展开谈起</a>
+            </div>
+            
+            <div class="cover">
+                <img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/cover/cover1.png"/>
+            </div>
+            
+        </li>
+        
+    </ul>
+    <div class="motto">Less is More<div>
+</body>
+</html>

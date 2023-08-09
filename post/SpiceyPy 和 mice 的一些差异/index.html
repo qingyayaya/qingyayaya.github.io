@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>SpiceyPy 和 mice 的一些差异</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">SpiceyPy 和 mice 的一些差异</p>
+        <p class="date">2023-01-10 18:00:00</p>
+        
+        <div class="content">
+            <p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/hi.jpg" width="150"></center></p>
+<p>SpiceyPy 是 Python 版本的 SPICE 工具箱，mice 是 MATLAB 版本的 SPICE 工具箱。SpiceyPy 和 mice 用起来有一些差异，尤其是先接触 mice 再接触 SpiceyPy 的用户，这里主要介绍三点不同：<strong>Not Found Errors</strong>、<strong>向量化</strong>、**spkw09()**。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/spice.jpeg" width="350"></center></p>
+<h1 id="not-found-errors">Not Found Errors</h1>
+<p>mice 带有查询性质的函数的末尾返回参数往往是一个布尔型变量<code>found</code>，表示是否查询到。举个例子，可以用下面的代码查询<code>&#39;Earth&#39;</code>对应的 id：</p>
+<pre data-lang="matlab"><code class="hljs language-matlab">[id, found] = cspice_bodn2c(<span class="hljs-string">&#x27;Earth&#x27;</span>)
+</code></pre>
+<p>如果内核认识<code>&#39;Earth&#39;</code>，那么<code>found</code>为<code>true</code>，否则<code>found</code>为<code>false</code>。再比如，可以用下面的代码查询 id 为 1 的 frame 的信息：</p>
+<pre data-lang="matlab"><code class="hljs language-matlab">[cent, frclss, clssid, found] = cspice_frinfo(<span class="hljs-number">1</span>)
+</code></pre>
+<p>如果内核存在该 frame，那么<code>found</code>为<code>true</code>，否则<code>found</code>为<code>false</code>。</p>
+<hr>
+<p>但是，SpiceyPy 引入了 Not Found Errors 机制，初学者极易在此产生困惑。还是用<code>frinfo()</code>函数举例子，我们在 Jupyter Notebook 里进行演示，先导入 SpiceyPy 库：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook11.png" width="700"></center></p>
+<p>然后查询 id 为 1 的 frame 的信息：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook12.png" width="700"></center></p>
+<p>报错，说我们期望的返回值是 4 个，但是实际返回值是 3 个，因此无法完成解包操作。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/girl.jpg" width="150"></center></p>
+<p>然而 <a href="https://spiceypy.readthedocs.io/en/main/documentation.html#spiceypy.spiceypy.frinfo">API</a> 给的该函数就是 4 个返回值啊？？？</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/frinfo_API.png" width="700"></center></p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/ren.jpg" width="220"></center></p>
+<p>打开<code>frinfo()</code>函数的源代码，可以看到的确 return 了 4 个值，而且最后一个是布尔型：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/frinfo.png" width="700"></center></p>
+<p>不妨用元组来接收返回值，看看到底返回了什么：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook13.png" width="700"></center></p>
+<p>不出所料，结果只有 3 个，还是没有预期的最后一个布尔型变量。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/b.jpg" width="150"></center></p>
+<p>真相是这样的，<code>frinfo()</code>函数外面套了一个叫做<code>@spice_found_exception_thrower</code>的装饰器，见源代码 6112 行，这个装饰器的作用是在<code>frinfo()</code>函数返回前，对返回值进行拦截。如果<code>found</code>为<code>True</code>，那么在最终返回值里剔除<code>found</code>，只返回前 3 个；如果<code>found</code>为<code>False</code>，则直接抛出异常<code>NotFoundError</code>。<code>NotFoundError</code>是 SpiceyPy 内置的一种异常，关于它的<a href="https://spiceypy.readthedocs.io/en/main/exceptions.html#not-found-errors">更详细解释</a>可以查看官方文档。</p>
+<hr>
+<p>官方文档指出，SpiceyPy 默认是开启<code>NotFoundError</code>侦测的，如果想暂时关闭它，可以通过如下的方式：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook14.png" width="700"></center></p>
+<p>此时便有了 4 个返回值，最后一个为<code>True</code>，可见的确是我们期望的结果。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/nice.jpg" width="150"></center></p>
+<p>需要注意的是，<code>no_found_check()</code>只是暂时关闭侦测，也就是在<code>with</code>语句之内都是遵守 API 的，<code>with</code>语句之外依然进行侦测（严谨地说，应该是<code>with</code>语句之外恢复之前的状态）。可以查看<code>no_found_check()</code>函数的源代码来证明这一点，<code>yield</code>之前<code>config.catch_false_founds</code>被设为了<code>False</code>，<code>yield</code>之后<code>config.catch_false_founds</code>被设为了之前的状态。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/no_found_check.png" width="700"></center></p>
+<p>我们在<code>with</code>语句之外再试一次，可以看到又变为 3 个输出了：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook15.png" width="700"></center></p>
+<p>如果想长久地关闭<code>NotFoundError</code>，可以用<code>found_check_off()</code>函数。关闭后如果再想打开，可以用<code>found_check_on()</code>函数。可以用<code>get_found_catch_state()</code>函数获得当前是否开启了<code>NotFoundError</code>。</p>
+<hr>
+<p>这种末尾返回参数是<code>found</code>的函数有很多，使用时需多加注意，列举如下：</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>函数</th>
+<th>函数</th>
+<th>函数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bodc2n</td>
+<td>dlabbs</td>
+<td>gcpool</td>
+<td>srfcss</td>
+</tr>
+<tr>
+<td>bodn2c</td>
+<td>dlabfs</td>
+<td>gdpool</td>
+<td>srfs2c</td>
+</tr>
+<tr>
+<td>bods2c</td>
+<td>dlafns</td>
+<td>gipool</td>
+<td>srfscc</td>
+</tr>
+<tr>
+<td>ccifrm</td>
+<td>dlafps</td>
+<td>gnpool</td>
+<td>srfxpt</td>
+</tr>
+<tr>
+<td>cidfrm</td>
+<td>dnearp</td>
+<td>inedpl</td>
+<td>stpool</td>
+</tr>
+<tr>
+<td>ckfrot</td>
+<td>dskxsi</td>
+<td>kdata</td>
+<td>surfpt</td>
+</tr>
+<tr>
+<td>ckfxfm</td>
+<td>dtpool</td>
+<td>kinfo</td>
+<td>surfpv</td>
+</tr>
+<tr>
+<td>ckgp</td>
+<td>ekgc</td>
+<td>kxtrct</td>
+<td>szpool</td>
+</tr>
+<tr>
+<td>ckgpav</td>
+<td>ekgd</td>
+<td>sincpt</td>
+<td>tkfram</td>
+</tr>
+<tr>
+<td>cnmfrm</td>
+<td>ekgi</td>
+<td>spksfs</td>
+<td>vprjpi</td>
+</tr>
+<tr>
+<td>dafgsr</td>
+<td>frinfo</td>
+<td>srfc2s</td>
+<td></td>
+</tr>
+</tbody></table>
+<h1 id="向量化">向量化</h1>
+<p>用 mice 的时候习惯了向量化，即绝大多数函数都能输入矩阵、返回矩阵，省去了相当多的 for 循环，不仅提高了代码可读性，更大大提高了计算效率，非常契合 MATLAB 的内涵。但是，刚转到 SpiceyPy 往往还保留着向量化的（先进）编程思维，可是 SpiceyPy 是对 C 语言版本忠实的翻译，C 语言版本的 API 是什么样，SpiceyPy 不会轻易改动，这就导致 SpiceyPy 和 mice 的不少函数存在使用差异。</p>
+<p>举个例子，<code>reclat()</code>函数用来把直角坐标转为经纬坐标，在 SpiceyPy 中，它接受 1 个直角坐标，返回对应的 radius, longitude 和 latitude，还是在 Jupyter Notebook 里进行演示，先导入 SpiceyPy 库：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook21.png" width="700"></center></p>
+<p>比如输入直角坐标 (1, 1, 1)，结果如下：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook22.png" width="700"></center></p>
+<p>当我们尝试输入两个直角坐标，则会报错：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook23.png" width="700"></center></p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/la.jpg" width="220"></center></p>
+<p>如果想一次性转换多个直角坐标，可以使用 for 循环：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook24.png" width="700"></center></p>
+<p>对于大量的数据，我们对比一下 for 循环和 numpy 提供的向量化函数<code>apply_along_axis()</code>的运行效率：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/notebook25.png" width="700"></center></p>
+<p>结果表明 for 循环略胜一筹。</p>
+<hr>
+<p>如果在 MATLAB 命令行输入：</p>
+<pre data-lang="matlab"><code class="hljs language-matlab">&gt;&gt; cspice_reclat([<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>; <span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>])
+</code></pre>
+<p>是可以正常运行的。那么为什么 mice 可以做到向量化？打开 mice.c 的源代码，可以看到 for 循环出现在这里，for 循环里的<code>reclat_c()</code>函数仍然只能一次转换一个直角坐标。也就是说 mice 在代码移植的时候就考虑了向量化，而 SpiceyPy 则没有。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/mex.png" width="700"></center></p>
+<h1 id="spkw09">spkw09()</h1>
+<p>在 mice 中，<code>cspice_spkw09()</code>函数接收 10 个参数，如下图所示：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/spkw09_matlab.png" width="700"></center></p>
+<p>而在 SpicePy 中，<code>spkw09()</code>函数接收 11 个参数，如下图所示：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/spkw09_python.png" width="700"></center></p>
+<p>区别在于，SpicePy 比 mice 多了一个参数<code>n</code>，代表<code>states</code>的元素个数。前面说过，SpiceyPy 是对 C 语言版本忠实的翻译。对于 C 语言来说，传入一个数组名给函数，函数是没法知晓该数组有多少元素的，因为数组名本质上是数组首元素的地址。故传入数组名给函数的同时，通常还要把数组的元素个数一并传给函数，这也就是为什么会有一个参数<code>n</code>的原因。</p>
+<p>那么为什么 mice 不用传参数<code>n</code>呢？打开 mice.c 的源代码，可以看到<code>n</code>是在接口函数里被自动计算出来的，不用我们手动指定。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post29/assets/spkw09_mex.png" width="700"></center></p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>SpiceyPy 和 mice 的一些差异</strong></p>
+                <p><a href="/post/SpiceyPy 和 mice 的一些差异/">https://qingyayaya.github.io/post/SpiceyPy 和 mice 的一些差异/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2023-01-10 18:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>

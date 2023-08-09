@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>开发一个极简静态博客生成器</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">开发一个极简静态博客生成器</p>
+        <p class="date">2022-05-06 17:00:00</p>
+        
+        <div class="content">
+            <h1 id="part-1--个人博客断舍离">Part 1 : 个人博客断舍离</h1>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/dsl.jpg" width="600"></center></p>
+<p>这件事情并非一时兴起，我有深思熟虑过很长一段时间。</p>
+<h2 id="为什么断舍离">为什么断舍离</h2>
+<p>有人喜欢收集车票电影票，还要把这些东西拍照留存，真是活在一堆过去的麻烦中啊。不懂得精简和丢弃的人，会被过去拖累，会身心疲惫。东西越多越不知道自己真正想要的是什么。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/tired.jpg" width="150"></center></p>
+<p>有一句话我深以为然：</p>
+<blockquote>
+<p>汉服可以掩盖身材缺陷，但这不是囤积汉服的理由。应该调整饮食结构和健身减肥，而不是靠衣服修饰身体来自欺欺人。</p>
+</blockquote>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/catgirl.jpg" width="150"></center></p>
+<p>我以前就有类似的误区，认为个人博客的功能越多越能证明一个人厉害，其实并非如此，因为内容才是博客真正的灵魂，过于关注形式其实会降低深度思考的能力。</p>
+<p>另一个重要原因，以前我用 Hexo 框架搭建博客，给我的感觉就是<strong>不可控</strong>，换句话说就是在整个过程中我的参与感很弱（<del>不过对有些人来说，参与感很弱恰恰是 Hexo 的优点，因为谁不喜欢无脑操作呢</del>）。我没精力去弄懂它那庞大的代码体系是如何工作的，也没法对输出的臃肿的 HTML 进行字符级别的精准控制，想对它<strong>极简</strong>都无从下手。这让我很不爽，我决定自己写一个极简的框架，这样每一句代码、每一个字符都完全服从我的意志（<del>好可怕的控制欲，感觉我似乎走上了另一条邪路 emmmmm</del>）。</p>
+<hr>
+<p>于是经过一番激烈的思想斗争，我舍弃了以前 Hexo 带给我的很多很多花里胡哨的东西，推倒重写了一个属于我自己的博客框架，算是找到了内容与形式的平衡点。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/girl.gif" width="150"></center></p>
+<h2 id="哪些该舍弃">哪些该舍弃</h2>
+<p>从性能的角度考虑，<strong>live2d 看板娘</strong>最应该舍弃：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_live2d.png" width="220"></center></p>
+<p>即使这个妹子实在很萌，我也不得不忍痛割爱。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/sorry.jpg" width="150"></center></p>
+<p>然后就是<strong>评论系统</strong>，Twikoo.js 的代码有 700KB 之多，损失性能、浪费流量不说，压根也没人评论（<del>不装了，这才是它被舍离的真正原因</del>）。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_twikoo.png" width="400"></center></p>
+<p><strong>切换壁纸面板</strong>大可不必存在，因为背景壁纸是导致花里胡哨的一大元凶。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_bgimage.png" width="260"></center></p>
+<p><strong>文章目录</strong>我觉得也没有必要保留。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_context.png" width="260"></center></p>
+<p><strong>文章头部信息</strong>虽然很详细，但是这反而让人一眼看过去不知道关注点是什么。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_info.png" width="500"></center></p>
+<p><strong>文章尾部版权</strong>以及<strong>分享功能</strong>我也删除了。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_share.png" width="500"></center></p>
+<p>这个板块是 Hexo 自带的，设计的挺好，我舍不得删掉的说实话，我很想（我也有能力）把它复刻到新的框架里，但是这也许就是麻衣女士所言<strong>扔东西的K点</strong>吧，一咬牙 → 恶向胆边生 → 抛弃了。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/k-point.jpg" width="400"></center></p>
+<p>再然后，一些非常鸡肋的<strong>念两句诗</strong>、<strong>友链</strong>、<strong>说说</strong>、<strong>归档</strong>、<strong>深色模式</strong>、<strong>站内搜索</strong>也通通舍弃。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_poem.png" width="400"></center></p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_friend.png" width="400"></center></p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_shuoshuo.png" width="400"></center></p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_achieve.png" width="400"></center></p>
+<h2 id="哪些该保留">哪些该保留</h2>
+<p>我觉得<strong>关于</strong>有必要保留，这里会展示个人信息、版权说明什么的。然后<strong>读书</strong>也得保留，毕竟咱是读书人嗷，以书会友是不是，而且这个页面挺极简的。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/old_book.png" width="400"></center></p>
+<h1 id="part-2--开发一个极简静态博客生成器">Part 2 : 开发一个极简静态博客生成器</h1>
+<p>下图的右图就是极简博客的首页，相比以前可以说是<strong>清爽到家了</strong>。除去几个第三方库，生成器的核心部分不到 300 行代码（<del>毕竟需求少导致代码少</del>）。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/home.jpg" width="600"></center></p>
+<h2 id="工作流">工作流</h2>
+<p>目前，在写博客和写公众号方面，我已经形成了一个比较成熟的工作流：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/workflow.jpg" width="500"></center></p>
+<h2 id="具体怎么实现">具体怎么实现</h2>
+<p>Q1 : 采用哪种编程语言？</p>
+<p>A1 : Javascript，基于 Node.js。因为开发网页离不开 Javascript，博客生成器也用 Javascript，可以减少我开发时的割裂感。</p>
+<p>Q2 : 是否专门适配移动端？</p>
+<p>A2 : 否。其一，如果专门为移动端进行适配，势必增加代码，这不极简。其二，我的一些博文有大量的公式，并不适合在移动端阅读。</p>
+<p>Q3 : 是否用 Markdown 写博客？</p>
+<p>A3 : 是。一篇博文对应一个 Markdown 文件。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/markdown.png" width="240"></center></p>
+<p>Q4 : 如何解析 Markdown文件？</p>
+<p>A4 : 在<a href="https://qingyayaya.github.io/post/%E5%9F%BA%E4%BA%8E%20marked.js%20%E5%AE%9A%E5%88%B6%E4%B8%80%E4%B8%AA%20Markdown%20%E8%A7%A3%E6%9E%90%E5%99%A8">基于 marked.js 定制一个 Markdown 解析器</a>介绍过，因为 <a href="https://marked.js.org/">marked.js</a> 在解析公式的时候经常遇到问题，而且网上已知的一些解决方案都不能满足我的需求，于是我通过分析源代码，定制了一款适合自己的解析器。</p>
+<p>Q5 : 一篇博文的属性信息保存在哪里？</p>
+<p>A5 : 在一个 Markdown 文件的头部，标记了这篇博客的标题、日期、封面图等关键信息。这些头部信息可以用第三方工具 <a href="https://www.npmjs.com/package/front-matter">front-matter</a> 解析成对象。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/front.png" width="600"></center></p>
+<p>Q6 : 是否采用模板？</p>
+<p>A6 : 是。使用我自己的解析器，可以把一个 Markdown 文件解析成一段 HTML，但是生成的只是正文部分，还需要把正文、标题、日期等元素填入模板，来生成完整的 HTML。模板的编译我用的是第三方工具 <a href="https://aui.github.io/art-template/zh-cn/">art-template</a>，因为它是国产的，而且它具有语法简单、轻量、速度快等优点。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/dog.gif" width="120"></center></p>
+<p>Q7 : 是否开发 cli 命令？</p>
+<p>A7 : 是。目前开发了以下几个命令：</p>
+<pre data-lang="bash"><code class="hljs language-bash">qingya -v <span class="hljs-comment"># 查看版本</span>
+qingya -g <span class="hljs-comment"># 生成（编译）</span>
+qingya -c <span class="hljs-comment"># 清除缓存</span>
+qingya -d <span class="hljs-comment"># 部署到远程仓库</span>
+qingya -i <span class="hljs-comment"># 初始化git</span>
+</code></pre>
+<hr>
+<p>目前这个极简博客生成器能够满足我的需求，但因为编程水平不高，一些功能实现得并不优雅，等着后面积累更多的编程骚操作再慢慢迭代吧。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post23/assets/fish.jpg" width="150"></center></p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>开发一个极简静态博客生成器</strong></p>
+                <p><a href="/post/开发一个极简静态博客生成器/">https://qingyayaya.github.io/post/开发一个极简静态博客生成器/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2022-05-06 17:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>

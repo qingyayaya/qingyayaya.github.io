@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>基于 marked.js 定制一个 Markdown 解析器</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">基于 marked.js 定制一个 Markdown 解析器</p>
+        <p class="date">2022-03-28 17:00:00</p>
+        
+        <div class="content">
+            <p><a href="https://marked.js.org/">marked.js</a> 是一款轻量级的快速 Markdown 解析器，可以运行在浏览器或服务器（ Node.js 环境）上，著名的 <a href="https://hexo.io/">Hexo</a> 和 <a href="https://docsify.js.org/">docsify</a> 等工具都依赖它，截至 2022 年 1 月 20 日，在 <a href="https://github.com/markedjs/marked">Github</a> 的 Star 数是 26700+</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/star.png" width="360"></center></p>
+<p>在 <a href="https://www.npmjs.com/package/marked">npm</a> 的周下载量高达 429 万，其火热程度可见一斑：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/npm.png" width="360"></center></p>
+<h1 id="为什么要改造-markedjs">为什么要改造 marked.js</h1>
+<p>marked.js 用来解析一般的 Markdown 是完全够用的，但是我遇到了几个问题：</p>
+<ol>
+<li>把<code>$</code>包裹的 LaTeX 公式解析成了普通文本</li>
+<li>把 LaTeX 公式的换行符<code>\\</code>转义成了<code>\</code>，导致不能正常换行</li>
+<li>把 LaTeX 公式的下标<code>_</code>解析成了斜体<code>&lt;em&gt;</code>标签</li>
+<li>无法把<code>?&gt;</code>开头的内容解析成提示（docsify 是可以做到的）</li>
+</ol>
+<p>注：我所使用的 marked.js 版本号为 4.0.10，后续版本是否有问题不得而知。</p>
+<h1 id="已知的解决方案">已知的解决方案</h1>
+<p>问题 1, 2, 3 可以统一成对 LaTeX 公式的支持问题。不妨以 Hexo 框架对 Markdown 的解析流程来分析问题的产生原因：</p>
+<p>Hexo 先读取 Markdown 文件，把字符串交给 marked.js 解析，<code>$</code>包裹的内容在 marked.js 看来无特殊含义，当作普通文本处理，然后转义机制把<code>\\</code>转义成了<code>\</code>，下标<code>_</code>被解析成了斜体<code>&lt;em&gt;</code>标签，最后 MathJax 渲染的时候，原 LaTeX 代码已经被动过手脚，于是出现异常。 </p>
+<p><strong>方案一</strong>：<code>\\</code>被转义成<code>\</code>，那么<code>\\\\</code>就被转义成<code>\\</code>，那么 4 个反斜线即可正常换行。下标<code>_</code>可以用<code>\_</code>替代。属于最次的解决方案，修改成本大，通用性差，修改后的 Markdown 文件迁移到其他平台又会出问题。</p>
+<p><strong>方案二</strong>：修改 marked.js 源代码，使其不再对<code>\\</code>进行转义，也不再把<code>_</code>解析成<code>&lt;em&gt;</code>标签，详细步骤可以参考<a href="http://blog.csdn.net/emptyset110/article/details/50123231">使Marked.js与MathJax共存</a>。属于治标不治本，因为不能保证还有无其它潜在的字符冲突，没有彻底解决问题。</p>
+<p><strong>方案三</strong>：从源头上解决问题，替换 Hexo 的解析引擎，比如采用 <a href="https://github.com/wzpan/hexo-renderer-pandoc">hexo-renderer-pandoc</a> 来解析。事实上，我以前确实是用的这种解决方案，但是它也有局限。第一，依赖 Pandoc，可我只想纯采用 js 语言。第二，无法根据个人需求深度定制。第三，我不想放弃 marked.js。</p>
+<p>注：以上三种方案参考了<a href="http://shomy.top/">天空的城</a>的博客 <a href="http://shomy.top/2016/10/22/hexo-markdown-mathjax/">Hexo下mathjax的转义问题</a>。</p>
+<h1 id="我的解决方案">我的解决方案</h1>
+<p>我觉得这个问题实在是太好解决了，好解决的前提是你得抓住问题 1, 2, 3 的本质，就一句话：</p>
+<blockquote>
+<p><code>$</code>包裹的内容在 marked.js 看来无特殊含义。</p>
+</blockquote>
+<p>那么我只要让 marked.js 认为<code>$</code>包裹的内容有意义，并且对它不做任何处理，原封不动的返回不就行了嘛。换句话说，叫做：</p>
+<blockquote>
+<p>扩展 marked.js 的语法。</p>
+</blockquote>
+<p>按照这样的思路，连带着把问题 4 也解决了，我让它认为<code>?&gt;</code>是有意义的即可。不止如此，以后遇到新的需求，我仍然可以随心所欲地扩展语法，这样才<strong>不失为解决问题的上策</strong>。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/liangzai.gif" width="150"></center></p>
+<p>那么，我需要扩展两个功能：</p>
+<ol>
+<li>扩展<code>$</code>语法</li>
+<li>扩展<code>?&gt;</code>语法</li>
+</ol>
+<p>问题又来了，实现这样的功能是否需要改动 marked.js 的源代码？若需改动，如何改。若不需改动，又当如何？</p>
+<h1 id="源码机制分析">源码机制分析</h1>
+<p>好在我找到一篇有帮助的<a href="https://blog.csdn.net/qq_22241923/article/details/106900403">教程</a>，作者明确说明，得改，必须改动源代码。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/damie.jpg" width="150"></center></p>
+<p>于是我也去逐字逐句地阅读了 marked.js 的源代码，彻底弄清楚了它解析 Markdown 的原理。整个源代码的结构如下：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/class.png" width="220"></center></p>
+<p><code>marked.js</code>提供了入口函数，把 Markdown 字符串输入进去，它会返回解析后的 HTML。所以，从它开始读起。首先，词法分析器<code>Lexer</code>类对字符串进行分析，得到<code>tokens</code>。然后，把<code>tokens</code>交给解析器<code>Parser</code>类，得到 HTML。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/marked.png" width="400"></center></p>
+<p><code>Lexer.js</code>得到 blockTokens 和 inlineTokens 两种 token，分别代表 HTML 的块级元素和行级元素：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/Lexer.png" width="400"></center></p>
+<p>以 blockTokens 为例，在一个 while 循环中，对字符串<code>src</code>进行匹配，<code>newline</code>，<code>code</code>，<code>fences</code>，<code>header</code>，......，挨个尝试，直到匹配到一个 token：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/blockTokens.png" width="400"></center></p>
+<p>比如，匹配到 list 列表后，先把对应的字符串从<code>src</code>中掐掉，再把得到的 token 压进<code>tokens</code>数组中。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/list.png" width="400"></center></p>
+<p>那么 token 究竟是怎么匹配出来的，需要阅读<code>Tokenizer.js</code>。每种块级元素和行内元素在 Tokenizer 类中都有对应的成员函数，在成员函数里定义了生成 token 的具体方法。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/Tokenizer.png" width="400"></center></p>
+<p>下面需要重点关注 rules，阅读<code>rules.js</code>。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/rules.png" width="400"></center></p>
+<p>原来<code>rules.block.newline</code>是一个正则表达式，通过执行<code>exec()</code>方法就可以对字符串进行匹配。</p>
+<hr>
+<p>到此为止，弄清楚了词法分析器<code>Lexer</code>类和分词器<code>Tokenizer</code>类是如何从字符串中提取出 token 的，下面解析器<code>Parser</code>类将对 token 进行解析。阅读<code>Parser.js</code>，它通过 for 循环对<code>tokens</code>进行遍历，根据每个 token 的 type 属性选择对应的渲染方式。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/Parser.png" width="400"></center></p>
+<p>进入渲染环节，需要阅读<code>Renderer.js</code>，每种块级元素和行内元素在 Renderer 类中都有对应的成员函数，定义了具体渲染成什么样：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/Renderer.png" width="400"></center></p>
+<p>官方文档也给 Renderer 部分提供了明确的 <a href="https://marked.js.org/using_pro#renderer">API</a>，并指出用户可以通过<code>marked.use()</code>定制成自己想要的渲染方式。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/api.png" width="400"></center></p>
+<p>不过，官方给出的定制自由度是不够的。自由度是不够是什么意思呢，官方按照内置的语法，把 Markdown 帮你解析好，你只能参与渲染这一最末端的环节，你可以把 blockquote 的渲染方式从：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-title function_">blockquote</span>(<span class="hljs-params">quote</span>) {
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;&lt;blockquote&gt;\n&#x27;</span> + quote + <span class="hljs-string">&#x27;&lt;/blockquote&gt;\n&#x27;</span>;
+}
+</code></pre>
+<p>定制成：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-title function_">blockquote</span>(<span class="hljs-params">quote</span>) {
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;&lt;div&gt;\n&#x27;</span> + quote + <span class="hljs-string">&#x27;&lt;/div&gt;\n&#x27;</span>;
+}
+</code></pre>
+<p>但你没法决定什么样的语法被理解成 blockquote。总之，在不改动 marked.js 源代码的前提下，可以定制渲染，却不能定制语法，所以我们要改动源代码。</p>
+<h1 id="扩展语法">扩展<code>$</code>语法</h1>
+<p>通过之前的分析，已经搞清楚了 marked.js 的工作机制，那么再进行语法扩展简直就是信手拈来了。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/dog.jpg" width="150"></center></p>
+<p>第一步，编写正则表达式，用于匹配<code>$</code>符号：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* rules.js */</span>
+
+<span class="hljs-comment">// 在源码基础上增加了latex</span>
+<span class="hljs-keyword">const</span> inline = {
+  <span class="hljs-attr">latex</span>: <span class="hljs-regexp">/^\${1,2}[\s\S]*?\${1,2}/</span>,
+  ...
+}
+</code></pre>
+<p>第二步，把<code>$</code>符号从 text 的正则表达式中剔除：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* rules.js */</span>
+
+<span class="hljs-comment">// 在源码基础上对text进行修改</span>
+<span class="hljs-keyword">const</span> inline = {
+  <span class="hljs-attr">text</span>: <span class="hljs-regexp">/^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\&lt;!\[`*_\$]|\b_|$)|[^ ](?= {2,}\n)))/</span>,
+}
+
+<span class="hljs-comment">// 如果开启了gfm，gfm的text也需要修改</span>
+inline.<span class="hljs-property">gfm</span> = <span class="hljs-title function_">merge</span>({}, inline.<span class="hljs-property">normal</span>, {
+  <span class="hljs-attr">text</span>: <span class="hljs-regexp">/^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&amp;&#x27;*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\&lt;!\[`*~_\$]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&amp;&#x27;*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&amp;&#x27;*+\/=?_`{\|}~-]+@)))/</span>
+});
+</code></pre>
+<p>第三步，给 Tokenizer 类增加成员函数：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Tokenizer.js */</span>
+
+<span class="hljs-comment">// 在源码基础上增加latex成员函数</span>
+<span class="hljs-title function_">latex</span>(<span class="hljs-params">src</span>) {
+  <span class="hljs-keyword">const</span> cap = <span class="hljs-variable language_">this</span>.<span class="hljs-property">rules</span>.<span class="hljs-property">inline</span>.<span class="hljs-property">latex</span>.<span class="hljs-title function_">exec</span>(src);
+  <span class="hljs-keyword">if</span> (cap) {
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;latex&#x27;</span>,
+      <span class="hljs-attr">raw</span>: cap[<span class="hljs-number">0</span>],
+      <span class="hljs-attr">text</span>: cap[<span class="hljs-number">0</span>].<span class="hljs-title function_">replaceAll</span>(<span class="hljs-string">&#x27;$&#x27;</span>, <span class="hljs-string">&#x27;&#x27;</span>), <span class="hljs-comment">// 用于去除首尾的$符号</span>
+    };
+  }
+}
+</code></pre>
+<p>第四步，给 Lexer 类增加 token 判定：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Lexer.js */</span>
+
+<span class="hljs-title function_">inlineTokens</span>(<span class="hljs-params">src, tokens = []</span>) {
+  ...
+  <span class="hljs-keyword">while</span> (src) {
+      
+    <span class="hljs-comment">// 在源码基础上增加latex的inlineToken</span>
+    <span class="hljs-keyword">if</span> (token = <span class="hljs-variable language_">this</span>.<span class="hljs-property">tokenizer</span>.<span class="hljs-title function_">latex</span>(src)) {
+      src = src.<span class="hljs-title function_">substring</span>(token.<span class="hljs-property">raw</span>.<span class="hljs-property">length</span>);
+      tokens.<span class="hljs-title function_">push</span>(token);
+      <span class="hljs-keyword">continue</span>;
+    }
+
+  }
+}
+</code></pre>
+<p>第五步，增加 Parser 类的 token 解析：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Parser.js */</span>
+
+<span class="hljs-title function_">parseInline</span>(<span class="hljs-params">tokens, renderer</span>) {
+  ...
+  <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; l; i++) {
+    ...
+    <span class="hljs-keyword">switch</span> (token.<span class="hljs-property">type</span>) {
+      <span class="hljs-comment">// 解析latex的inlineToken</span>
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;latex&#x27;</span>: {
+        out += renderer.<span class="hljs-title function_">latex</span>(token.<span class="hljs-property">text</span>);
+        <span class="hljs-keyword">break</span>;
+      }
+      ...
+    }
+  }
+}
+</code></pre>
+<p>第六步，给 Renderer 类增加成员函数：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Renderer.js */</span>
+
+<span class="hljs-comment">// 在源码基础上增加latex成员函数</span>
+<span class="hljs-title function_">latex</span>(<span class="hljs-params">tex</span>) {
+  <span class="hljs-keyword">return</span> tex; <span class="hljs-comment">// 这里渲染成什么，可以视需求而定</span>
+}
+</code></pre>
+<p>到此为止，改造后的 marked.js 便拥有了解析 LaTeX 的能力。之后，可以选择原封不动地输出，由 MathJax 客户端渲染，也可以采用 <a href="https://qingyayaya.github.io/MathJax%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%B8%B2%E6%9F%93%20LaTeX">MathJax 服务端渲染 LaTeX</a>。</p>
+<h1 id="扩展语法-1">扩展<code>?&gt;</code>语法</h1>
+<p>Markdown 使用<code>&gt;</code>表示引用，<code>?&gt;</code>和<code>&gt;</code>上是一样的，我们可以直接在 blockquote 的基础上进行语法扩展。</p>
+<p>第一步，修改 blockquote 的正则表达式，使其能匹配<code>?&gt;</code>符号：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* rules.js */</span>
+
+<span class="hljs-keyword">const</span> block = {
+  <span class="hljs-comment">// 在源码基础上修改blockquote</span>
+  <span class="hljs-attr">blockquote</span>: <span class="hljs-regexp">/^( {0,3}(&gt;|\?&gt;) ?(paragraph|[^\n]*)(?:\n|$))+/</span>,
+}
+</code></pre>
+<p>第二步，修改 blockquote 的 token：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Tokenizer.js */</span>
+
+<span class="hljs-title function_">blockquote</span>(<span class="hljs-params">src</span>) {
+  ...
+  <span class="hljs-keyword">if</span> (cap) {
+    <span class="hljs-keyword">const</span> regexp = <span class="hljs-regexp">/^ *(&gt;|\?&gt;) ?/gm</span>;
+    <span class="hljs-keyword">const</span> text = cap[<span class="hljs-number">0</span>].<span class="hljs-title function_">replace</span>(regexp, <span class="hljs-string">&#x27;&#x27;</span>);
+    <span class="hljs-keyword">return</span> {
+      ...
+      <span class="hljs-comment">// 在源码基础上增加了flag，用于标注是&gt;还是?&gt;</span>
+      <span class="hljs-attr">flag</span>: cap[<span class="hljs-number">0</span>].<span class="hljs-title function_">match</span>(regexp)[<span class="hljs-number">0</span>].<span class="hljs-title function_">trim</span>()
+    };
+  }
+}
+</code></pre>
+<p>第三步，修改 blockquote 的 token 解析方式，把<code>token.flag</code>传给渲染器：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Parser.js */</span>
+
+<span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;blockquote&#x27;</span>: {
+  ...
+  out += <span class="hljs-variable language_">this</span>.<span class="hljs-property">renderer</span>.<span class="hljs-title function_">blockquote</span>(body, token.<span class="hljs-property">flag</span>);
+  ...
+}
+</code></pre>
+<p>第四步，修改 blockquote 的渲染方式：</p>
+<pre data-lang="javascript"><code class="hljs language-javascript"><span class="hljs-comment">/* Renderer.js */</span>
+
+<span class="hljs-title function_">blockquote</span>(<span class="hljs-params">quote, flag</span>) {
+  <span class="hljs-keyword">if</span> (flag == <span class="hljs-string">&#x27;&gt;&#x27;</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;&lt;blockquote&gt;\n&#x27;</span> + quote + <span class="hljs-string">&#x27;&lt;/blockquote&gt;\n&#x27;</span>;
+  }
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;&lt;div class=&quot;warn&quot;&gt;\n&#x27;</span> + quote + <span class="hljs-string">&#x27;&lt;/div&gt;\n&#x27;</span>; <span class="hljs-comment">// 具体如何解析，视需求而定</span>
+}
+</code></pre>
+<h1 id="结尾">结尾</h1>
+<p>总结一下本文：由于网上已知的 3 种解决方案都不能满足我的需求，于是我通过分析源代码，扩展了 marked.js 的语法，彻底解决了 marked.js 的一些痛点，以后再有新的需求也可轻松实现。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post20/assets/yoohoo.jpg" width="150"></center></p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>基于 marked.js 定制一个 Markdown 解析器</strong></p>
+                <p><a href="/post/基于 marked.js 定制一个 Markdown 解析器/">https://qingyayaya.github.io/post/基于 marked.js 定制一个 Markdown 解析器/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2022-03-28 17:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>
