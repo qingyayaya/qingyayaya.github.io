@@ -33,7 +33,7 @@
 </blockquote>
 <h1 id="客户端渲染的弊端">客户端渲染的弊端</h1>
 <p>在博客上显示 LaTeX 数学公式，一直很困扰我，倒不是说技术上有多难实现（前面也说了 MathJax 的用法是弱智级别的），而是我有些文章使用了上百个 LaTeX 公式，以《<a href="https://qingyayaya.github.io/post/%E4%BB%8E%20ln(1+x)%20%E7%9A%84%E8%BF%9E%E5%88%86%E5%BC%8F%E5%B1%95%E5%BC%80%E8%B0%88%E8%B5%B7/">从 ln(1+x) 的连分式展开谈起</a>》为例：</p>
-<center><video src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/CSR.mp4" controls autoplay loop muted>your browser does not support the video tag</video></center><p>整个渲染过程花了 10 多秒！我们总是希望一个页面显示的越快越好。而且，公式提取 → 公式处理 → 公式预显示 → 换成TeX字体的整个流程下来，公式的形式变来变去，页面上蹿下跳，真就还不如等 10 秒全部渲染完后再显示出来呢。不仅影响读者的阅读体验，对我个人来说这种糟糕的设计非常折磨人。</p>
+<center><video src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/CSR.mp4" controls autoplay loop muted>your browser does not support the video tag</video></center><p>整个渲染过程花了 10 多秒！我们总是希望一个页面显示的越快越好。而且，公式提取 → 公式处理 → 公式预显示 → 换成TeX字体的整个流程下来，公式的形式变来变去，页面上蹿下跳，真就还不如等 10 秒全部渲染完后再显示出来呢。不仅影响读者的阅读体验，对我个人来说这种糟糕的设计非常折磨人。</p>
 <p>还有一个非常劳什子的右键菜单，根本用不到，即便可以配置成默认关闭，但是，这并不极简。</p>
 <p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post17/assets/menu.png" width="300"></center></p>
 <p>所以，客户端渲染 LaTeX 体现出了一些弊端（至少对我来说是弊端），于是我思考能否事先渲染好 LaTeX 公式，生成纯静态的页面，达到服务端一次生成，客户端后续无需重复渲染，从根源上解决问题呢？</p>
