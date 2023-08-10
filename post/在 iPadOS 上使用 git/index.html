@@ -6,6 +6,9 @@
     <title>在 iPadOS 上使用 git</title>
     <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
     
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
@@ -17,7 +20,7 @@
         <div class="content">
             <p>谈论如何在 iPadOS 上使用 <a href="https://git-scm.com/">git</a> 之前，我们需要介绍为什么会有这方面的需求：</p>
 <blockquote>
-<p>有一款小有名气的笔记管理软件叫做 <a href="https://obsidian.md/">Obsidian</a>，我把它安装在我的 Linux 计算机和 iPad 上，在计算机上进行密集型的写作，在 iPad 上进行查阅及轻量级的编辑。但是问题在于 Obsidian 以本地化的笔记管理见长，这种设计理念意味着它在多端同步方面有着先天的不足，把计算机上的笔记同步到 iPad 是一件相当折磨的事情。</p>
+<p>有一款小有名气的笔记管理软件叫做 <a href="https://obsidian.md/">Obsidian</a>，我把它安装在我的 Linux 计算机和 iPad 上，在计算机上进行密集型的写作（比如本文），在 iPad 上进行查阅及轻量级的编辑。但是问题在于 Obsidian 以本地化的笔记管理见长，这种设计理念意味着它在多端同步方面有着先天的不足，把计算机上的笔记同步到 iPad 是一件相当折磨的事情。</p>
 <p>我最先想到的就是借助 github 进行同步（其实还有比它方便得多的办法，这将在后续介绍），然而 iPadOS 上并没有官方的 git CLI。第三方 git 工具比如 Working Copy 是收费软件，这与 git 本身的开源理念背道而驰，而且我个人认为其图形界面相当凌乱与丑陋，所以我对该第三方 APP 持抵触态度。再者相比图形界面我其实更习惯用命令行操作 git。</p>
 <p>那么，找到一种在 iPadOS 上使用 git，并且能自由地使用 git 完整功能的方法，就是我的需求。</p>
 </blockquote>
@@ -38,7 +41,7 @@
 <p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post32/assets/mount.jpeg" width="500"></center></p>
 <p>命令执行完毕会弹出对话框，选择需要挂载的文件夹即可：</p>
 <p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post32/assets/mount-test.jpeg" width="500"></center></p>
-<p>选择自己喜欢的方式写一段代码，这里我用的是 Koder，写了一段非常简易的计算平方的 C++ 代码：</p>
+<p>选择自己喜欢的方式写一段代码，用 Linux 自带的 vi 或者安装 Vim 都可以，这里我用的是 Koder，写了一段非常简易的计算平方的 C++ 代码：</p>
 <p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post32/assets/koder.png" width="500"></center></p>
 <p>之后进入 iSH 使用<code>g++</code>进行编译：</p>
 <p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post32/assets/g++1.jpeg" width="500"></center></p>

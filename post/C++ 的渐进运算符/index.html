@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>C++ 的渐进运算符</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">C++ 的渐进运算符</p>
+        <p class="date">2023-08-10 14:00:00</p>
+        
+        <div class="content">
+            <p>C++ 有一个非常花哨的运算符<code>a --&gt; b</code>，它表示由<code>a</code>逐步长<code>-1</code>趋近<code>b</code>，比如下面的例子：</p>
+<pre data-lang="cpp"><code class="hljs language-cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span>
+<span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-type">int</span> x = <span class="hljs-number">10</span>;
+    <span class="hljs-keyword">while</span> (x --&gt; <span class="hljs-number">0</span>)
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, x);
+}
+</code></pre>
+<p>它的执行结果为：</p>
+<pre><code>9 8 7 6 5 4 3 2 1 0
+</code></pre>
+<p>而且，还可以反向书写为<code>b &lt;-- a</code>：</p>
+<pre data-lang="cpp"><code class="hljs language-cpp"><span class="hljs-type">int</span> x = <span class="hljs-number">10</span>;
+<span class="hljs-keyword">while</span> (<span class="hljs-number">0</span> &lt;-- x)
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, x);
+</code></pre>
+<p>但是结果稍有不同，不包含最终的目标<code>0</code>：</p>
+<pre><code>9 8 7 6 5 4 3 2 1
+</code></pre>
+<p>咦，那我们把箭头的横线加长一点，有没有可能增加步长呢？试验一下：</p>
+<pre data-lang="cpp"><code class="hljs language-cpp"><span class="hljs-type">int</span> x = <span class="hljs-number">10</span>;
+<span class="hljs-keyword">while</span> (<span class="hljs-number">0</span> &lt;---- x)
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, x);
+</code></pre>
+<p>执行结果为：</p>
+<pre><code>8 6 4 2
+</code></pre>
+<p>果然，步长变为了<code>-2</code>，这说明我们可以通过改变箭头的横线来调节步长。(<strong>注，步长调节只适用于左箭头，并不支持右箭头。</strong>)</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/dog1.png" width="150"></center></p>
+<p>这样一个“渐进”运算符无疑让我们的代码更简洁明快，但是 C++ 的标准里面好像对此只字未提啊，不禁令人质疑它真的是 C++ 中原子的或者说不可分割的 token 吗？</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/dog2.jpg" width="150"></center></p>
+<p>其实所谓的“渐进”运算符并不存在，它只是一个 trick，右箭头<code>a --&gt; b</code>其实是<code>(a--) &gt; b</code>，左箭头<code>b &lt;-- a</code>其实是<code>b &lt; (--a)</code>，如此一来上文所有的行为都合理了。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/dog3.jpg" width="150"></center></p>
+<p>所以我们也可以写出下面形式的代码：</p>
+<pre data-lang="cpp"><code class="hljs language-cpp"><span class="hljs-type">int</span> x = <span class="hljs-number">0</span>;
+<span class="hljs-keyword">while</span> (x ++&gt; <span class="hljs-number">10</span>)
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, x);
+</code></pre>
+<pre data-lang="cpp"><code class="hljs language-cpp"><span class="hljs-type">int</span> x = <span class="hljs-number">0</span>;
+<span class="hljs-keyword">while</span> (<span class="hljs-number">10</span> &lt;++++++ x)
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, x);
+</code></pre>
+<p>你以为到此就完了吗？别忘了 C++ 是支持运算符重载的，而后置<code>++</code>和<code>&gt;</code>都是可以重载的，那么我们就有的发挥了。我们看看 <a href="https://github.com/sogou/workflow">workflow</a> 项目是如何鬼才地利用这一特性的：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/workflow1.png" width="600"></center></p>
+<p>所谓的 DAG 就是有向无环图，如下图：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/simple.svg" width="260"></center></p>
+<p>然后创建了<code>a</code>,<code>b</code>,<code>c</code>,<code>d</code>四个节点：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/workflow2.png" width="600"></center></p>
+<p>鬼才的地方来了，它直接用<code>--&gt;</code>实现把各个节点连接起来。。。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/workflow3.png" width="600"></center></p>
+<p>而且还有更加炸裂的连接方式。。。。。。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/workflow4.png" width="600"></center></p>
+<p>它的实现原理就是重载了几个运算符：</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post33/assets/workflow5.png" width="600"></center></p>
+<p>原理很虽然，但是思路很创新。</p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>C++ 的渐进运算符</strong></p>
+                <p><a href="/post/C++ 的渐进运算符/">https://qingyayaya.github.io/post/C++ 的渐进运算符/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2023-08-10 14:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>
