@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>Linux 引导失败怎么修</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">Linux 引导失败怎么修</p>
+        <p class="date">2024-07-05 14:00:00</p>
+        
+        <div class="content">
+            <p>俗话说，Linux 用户不是在修 grub，就是在修 grub 的路上。</p>
+<p>对于双系统用户，长时间没进 Windows，必然接受 Windows 不更新就不给关机的毒打。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post36/assets/update.png" width="300"></center></p>
+<p>然而，这次更新，直接把我的引导搞没了。后来我才知道，Windows 更新容易把 Linux 覆盖掉是常有的事。正常情况下，我的 Manjaro Linux 开机的引导画面类似下面这样，在这里选择 boot 进 Linux 还是 Windows。</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post36/assets/Manjaro-grub.jpg" width="400"></center></p>
+<p>但是，这次更新完 Windows 后，再次开机直接进入了 grub 命令行。尝试了</p>
+<pre><code>grub&gt; reboot
+</code></pre>
+<p>以及</p>
+<pre><code>grub&gt; exit
+</code></pre>
+<p>结果都是退出后又再次进入 grub 命令行，开始意识到出事了。懵逼了几分钟后，突然反应过来进 BIOS 看看，好在还可以在 BIOS 中更改引导顺序，把 Windows 提到最前面，退出 BIOS，成功进入 Windows。在 Windows 下检查硬盘分区，并没有损坏，<code>/</code>和<code>~/</code>目录下的文件都还在，终于松了一口。然后就是赶紧把 Linux 下重要的文件备份出来。文件抢救出来之后，最坏的结果就是重装 Linux，至少不至于令人崩溃，只不过又得重头配置一遍。</p>
+<p>接下来的问题就是还有没有修复的可能，在查找了众多资料并且多次尝试未果后，我终于找到了一种有效的方法。</p>
+<ol>
+<li>首先列出所有分区：</li>
+</ol>
+<pre><code>grub&gt; ls
+</code></pre>
+<p>对我来说，结果如下：</p>
+<pre><code>(hd0),(hd0,gpt9),(hd0,gpt8),...,(hd0,gpt1),(hd1,gpt2),(hd1,gpt1)
+</code></pre>
+<ol start="2">
+<li>然后不断尝试如下命令：</li>
+</ol>
+<pre><code>grub&gt; ls (hd&lt;X&gt;,gpt&lt;Y&gt;)/
+</code></pre>
+<p>这里<code>&lt;X&gt;</code>表示硬盘的编号，<code>&lt;Y&gt;</code>表示分区的编号，不断尝试，直到找到 Linux <code>/boot</code>目录所在的分区，以我为例，我的<code>/boot</code>目录就在<code>/</code>目录之下，最终定位到<code>(hd0,gpt7)</code>分区。</p>
+<ol start="3">
+<li>之后设置 grub 启动位置：</li>
+</ol>
+<pre><code>grub&gt; set root=(hd0,gpt7)
+grub&gt; set prefix=(hd0,gpt7)/boot/grub
+</code></pre>
+<ol start="4">
+<li>设置 grub 进入正常模式：</li>
+</ol>
+<pre><code>grub&gt; insmod normal
+grub&gt; normal
+</code></pre>
+<p>完成之后，之前丢失的引导画面就再次显示了，选择 Manjaro，成功进入。</p>
+<ol start="5">
+<li>但是，如果就此结束，下次开机还会问题还会重演，所以需要在进入 Liunx 后更新和修复 grub 引导：</li>
+</ol>
+<pre data-lang="bash"><code class="hljs language-bash">$ sudo update-grub
+$ sudo grub-install /dev/nvme0n1
+</code></pre>
+<p>这里的参数<code>/dev/nvme0n1</code>是 Disk 的名称，因为前面的分区 (Device)<code>(hd0,gpt7)</code>在该物理实体下。如果不确定这个参数，可以用：</p>
+<pre data-lang="bash"><code class="hljs language-bash">$ sudo fdisk -l
+</code></pre>
+<p>列出所有的 Disk 和 Device。如果是 SATA 接口的硬盘，这个参数可能是<code>/dev/sda</code>。</p>
+<hr>
+<p>一些后话：经过多次被 Windows 坑惨之后，我认为双系统持有者，尤其是 Linux 重度用户却不得不保留 Windows 的群体，在切换到 Windows 进行演讲、在线会议等重要事项时，有必要提前一两天进入 Windows，解决好 Windows 更新，不然的话如果突然发生今天这种情况就不好了。</p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>Linux 引导失败怎么修</strong></p>
+                <p><a href="/post/Linux 引导失败怎么修/">https://qingyayaya.github.io/post/Linux 引导失败怎么修/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2024-07-05 14:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>
