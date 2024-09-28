@@ -58,11 +58,11 @@ grub&gt; normal
 <ol start="5">
 <li>但是，如果就此结束，下次开机还会问题还会重演，所以需要在进入 Liunx 后更新和修复 grub 引导：</li>
 </ol>
-<pre data-lang="bash"><code class="hljs language-bash">$ sudo update-grub
-$ sudo grub-install /dev/nvme0n1
+<pre data-lang="bash"><code class="hljs language-bash">$ <span class="hljs-built_in">sudo</span> update-grub
+$ <span class="hljs-built_in">sudo</span> grub-install /dev/nvme0n1
 </code></pre>
 <p>这里的参数<code>/dev/nvme0n1</code>是 Disk 的名称，因为前面的分区 (Device)<code>(hd0,gpt7)</code>在该物理实体下。如果不确定这个参数，可以用：</p>
-<pre data-lang="bash"><code class="hljs language-bash">$ sudo fdisk -l
+<pre data-lang="bash"><code class="hljs language-bash">$ <span class="hljs-built_in">sudo</span> fdisk -l
 </code></pre>
 <p>列出所有的 Disk 和 Device。如果是 SATA 接口的硬盘，这个参数可能是<code>/dev/sda</code>。</p>
 <hr>

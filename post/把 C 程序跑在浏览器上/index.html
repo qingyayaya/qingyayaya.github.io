@@ -60,8 +60,8 @@ git pull
 <pre data-lang="bash"><code class="hljs language-bash">yay -S emsdk
 </code></pre>
 <p>但是安装 SDK 的时候需要给管理员权限：</p>
-<pre data-lang="bash"><code class="hljs language-bash">sudo emsdk install latest
-sudo emsdk activate latest
+<pre data-lang="bash"><code class="hljs language-bash"><span class="hljs-built_in">sudo</span> emsdk install latest
+<span class="hljs-built_in">sudo</span> emsdk activate latest
 </code></pre>
 <p>此时，<code>emcc</code>编译器便已经安装了，不过<strong>每次使用之前需要配置</strong>必要的环境变量：</p>
 <pre data-lang="bash"><code class="hljs language-bash"><span class="hljs-built_in">source</span> <span class="hljs-string">&quot;/usr/lib/emsdk/emsdk_env.sh&quot;</span>
