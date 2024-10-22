@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <title>C++ 模板穿透技术</title>
+    <link rel="icon" href="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/static/pics/img/avatar.png">
+    
+    <link rel="stylesheet" href="https://gcore.jsdelivr.net/npm/highlight.js@11.3.1/styles/github.css">
+    <link rel="stylesheet" href="https://fonts.loli.net/css2?family=Source+Code+Pro">
+    
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <article>
+        
+        <p class="title">C++ 模板穿透技术</p>
+        <p class="date">2024-10-23 10:00:00</p>
+        
+        <div class="content">
+            <p>假如有这样一个需求，对于模板类<code>D&lt;C&lt;B&lt;std::tuple&lt;A0, A1, A2&gt;&gt;&gt;&gt;</code>，我们希望类模板<code>std::tuple</code>穿过其外层的尖括号，并将外层的模板映射到其每个元素之上，即得到新的模板类<code>std::tuple&lt;D&lt;C&lt;B&lt;A0&gt;&gt;&gt;, D&lt;C&lt;B&lt;A1&gt;&gt;&gt;, D&lt;C&lt;B&lt;A2&gt;&gt;&gt;&gt;</code>，如何做到？这固然可以手动实现，但我们希望编译器能完成<strong>自动推导</strong>，因为如果类模板<code>D</code>的外层还嵌套着<code>E</code>和<code>F</code>等等呢？我们的目标是给出一个通用的解决方案。</p>
+<p>简便起见，我们假设类模板<code>D</code>，<code>C</code>，<code>B</code>都是空的：</p>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Inner&gt;
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">D</span> {};
+
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Inner&gt;
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">C</span> {};
+
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Inner&gt;
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">B</span> {};
+</code></pre>
+<p>类<code>A0</code>，<code>A1</code>，<code>A2</code>也都是空的：</p>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">A0</span> {};
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">A1</span> {};
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">A2</span> {};
+</code></pre>
+<p>上述问题显然符合递归求解的思想，只不过这一次我们不再在运行时递归，而是在<strong>编译期递归</strong>。</p>
+<p>为了阐述下文，我们还不得不简要介绍一下<strong>模板的模板参数</strong>：</p>
+<blockquote>
+<p>在实例化一个模板的时候需要确定其参数，那么这个参数可以是什么呢？最容易理解的就是类型参数，也是最符合直觉的，就是司空见惯的<code>template &lt;typename T&gt;</code>里面的<code>T</code>。第二种是值参数，比如<code>std::array&lt;double, 6&gt;</code>里的常量<code>6</code>就是值参数，并且值参数严格限定为整数或枚举类型。最后一种，就是模板的参数也可以是一个模板，叫做模板的模板参数，比如对于<code>template &lt;template &lt;typename&gt; typename T&gt; struct X ： T&lt;double&gt; {};</code>，那么<code>X&lt;std::vector&gt;</code>将继承自<code>std::vector&lt;double&gt;</code>，而<code>X&lt;std::set&gt;</code>将继承自<code>std::set&lt;double&gt;</code>，这里无论是传<code>std::vector</code>还是<code>std::set</code>，传入的都是一个模板。总而言之，模板的参数一共有三种形式：</p>
+<ol>
+<li>类型</li>
+<li>值</li>
+<li>模板</li>
+</ol>
+</blockquote>
+<p>懂了模板的模板参数，我们就可以尝试将<code>D&lt;C&lt;B&lt;std::tuple&lt;A0, A1, A2&gt;&gt;&gt;&gt;</code>嵌套的模板一层一层扒开：</p>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>&gt; <span class="hljs-keyword">typename</span> Outer, <span class="hljs-keyword">typename</span> Inner&gt;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">foo</span><span class="hljs-params">(Outer&lt;Inner&gt;)</span> -&gt; Outer&lt;<span class="hljs-title">decltype</span><span class="hljs-params">(foo(Inner{}))</span>&gt;
+</span>{
+    <span class="hljs-keyword">return</span> {};
+}
+</code></pre>
+<p>上面这段代码相当之抽象，而且相较于经典 C++ 已经面目全非了。我们抽丝剥茧解读一下：</p>
+<ul>
+<li><code>Outer</code>与<code>Inner</code>。显然<code>Outer</code>是模板的模板参数，<code>Inner</code>是模板的类型参数，我们这么做的目的就是分离出外层和内层。比如把<code>D&lt;C&lt;B&lt;std::tuple&lt;A0, A1, A2&gt;&gt;&gt;&gt;</code>传入<code>foo</code>函数，那么编译器的重载决议将把<code>Outer</code>匹配为<code>D</code>，把<code>Inner</code>匹配为<code>C&lt;B&lt;std::tuple&lt;A0, A1, A2&gt;&gt;&gt;</code>。</li>
+<li>由于没有用到形参，所以<code>foo</code>函数的形参名缺省了，只保留了形参类型<code>Outer&lt;Inner&gt;</code>。</li>
+<li>用到了返回值后置。（但其实不后置也完全可以，这里只是个人书写习惯，想强调返回类型是编译器推导出来的）</li>
+<li>我们继续把<code>Inner</code>传入<code>foo</code>函数，以进一步地剥离，递归的“递”就体现在这里。但是<code>foo</code>函数接受的是类实例，所以我们用<code>Inner{}</code>实例化了一下。</li>
+<li>我们还需要把外层模板映射到<code>std::tuple</code>每个元素之上，所以需要把<code>foo(Inner{})</code>的返回类型传入<code>Outer</code>，即递归的“归”。</li>
+<li><code>foo(Inner{})</code>的返回类型需要交给编译器去推导，这里借助了关键字<code>decltype</code>。并且，<code>decltype</code>只是编译期做推导，所以无需担心<code>Inner{}</code>的开销，因为不会在运行时真的实例化它，甚至它根本就不会存在于运行时。</li>
+<li>因为都是空类，直接<code>return {};</code>就好。</li>
+</ul>
+<p>这段代码还缺失一个重要功能，就是递归的终止条件。显然，递归的“递”应该在<code>Inner</code>为<code>std::tuple&lt;A0, A1, A2&gt;</code>时终止。所以，我们需要为<code>foo</code>函数再写一个偏特化的版本：</p>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>&gt; <span class="hljs-keyword">typename</span> Outer&gt;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">foo</span><span class="hljs-params">(Outer&lt;std::tuple&lt;A0, A1, A2&gt;&gt;)</span> -&gt; Outer&lt;A0&gt;
+</span>{
+    <span class="hljs-keyword">return</span> {};
+}
+</code></pre>
+<p>这样，当把<code>D&lt;C&lt;B&lt;std::tuple&lt;A0, A1, A2&gt;&gt;&gt;&gt;</code>传入<code>foo</code>函数，最终的返回类型就是<code>D&lt;C&lt;B&lt;A0&gt;&gt;&gt;</code>。最后，我们再为<code>A1</code>和<code>A2</code>编写类似的函数，再用<code>std::tuple</code>将三个结果整合，就解决了。</p>
+<p>但是，这样我们需要写三个函数，加上偏特化，一共是六个，并且它们高度相似，还是没做到尽可能的复用代码，并不想就此止步。考虑到<code>std::tuple_element_t</code>可以用来萃取<code>std::tuple</code>的元素类型，于是我们有了下面的改进版：</p>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-type">int</span> n, <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>&gt; <span class="hljs-keyword">typename</span> Outer, <span class="hljs-keyword">typename</span> Inner&gt;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">foo</span><span class="hljs-params">(Outer&lt;Inner&gt;)</span> -&gt; Outer&lt;<span class="hljs-title">decltype</span><span class="hljs-params">(foo&lt;n&gt;(Inner{}))</span>&gt;
+</span>{
+    <span class="hljs-keyword">return</span> {};
+}
+
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-type">int</span> n, <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>&gt; <span class="hljs-keyword">typename</span> Outer&gt;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">foo</span><span class="hljs-params">(Outer&lt;std::tuple&lt;A0, A1, A2&gt;&gt;)</span> -&gt; Outer&lt;std::<span class="hljs-type">tuple_element_t</span>&lt;n, std::tuple&lt;A0, A1, A2&gt;&gt;&gt;
+</span>{
+    <span class="hljs-keyword">return</span> {};
+}
+</code></pre>
+<p>在这个版本中，我们利用了模板函数调用可以部分指定参数的特性，将值参数<code>n</code>一层一层传下去，并在最底层提取出<code>std::tuple&lt;A0, A1, A2&gt;</code>的第<code>n</code>个元素类型。</p>
+<p>最终，再用一个函数把结果们整合起来：</p>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">using</span> T = D&lt;C&lt;B&lt;std::tuple&lt;A0, A1, A2&gt;&gt;&gt;&gt;;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">bar</span><span class="hljs-params">(T)</span>
+</span>{
+    <span class="hljs-keyword">return</span> std::<span class="hljs-built_in">tuple</span>(
+        <span class="hljs-built_in">foo</span>&lt;<span class="hljs-number">0</span>&gt;(T{}),
+        <span class="hljs-built_in">foo</span>&lt;<span class="hljs-number">1</span>&gt;(T{}),
+        <span class="hljs-built_in">foo</span>&lt;<span class="hljs-number">2</span>&gt;(T{})
+    );
+}
+</code></pre>
+<p>我们有两种方式来验证<code>bar</code>函数的返回类型是不是我们所期望的：</p>
+<ul>
+<li>使用断言：</li>
+</ul>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-built_in">static_assert</span>( std::is_same_v&lt; <span class="hljs-keyword">decltype</span>(<span class="hljs-built_in">bar</span>(T{})), std::tuple&lt;D&lt;C&lt;B&lt;A0&gt;&gt;&gt;, D&lt;C&lt;B&lt;A1&gt;&gt;&gt;, D&lt;C&lt;B&lt;A2&gt;&gt;&gt;&gt; &gt; );
+</code></pre>
+<p>这样最符合直觉，但是又回到了一开头不够通用的问题。</p>
+<ul>
+<li>故意让编译器报错：</li>
+</ul>
+<pre data-lang="c++"><code class="hljs language-c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>...&gt;
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">check</span>;
+
+<span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+</span>{
+    check&lt;<span class="hljs-keyword">decltype</span>(<span class="hljs-built_in">bar</span>(T{}))&gt;{};
+}
+</code></pre>
+<p>这是一个很妙的 trick，因为我们压根没有实现<code>check</code>类模板，编译器必然报错，而报错结果中就有我们所需的答案，做到了通用。以<code>g++</code>为例，</p>
+<p><center><img src="https://gcore.jsdelivr.net/gh/qingyayaya/qingya-post/posts/post37/assets/error.png" width=""></center></p>
+<p>从报错结果中可以清楚看到我们推导成功了，我们成功地完成了模板的穿透。</p>
+<hr>
+<p>但是，我们紧接着就得解释这么做有何意义，难道只是在玩智力游戏？而且你那些<code>D</code>，<code>C</code>，<code>B</code>都是空的，有啥现实意义啊。</p>
+<p>实际上，模板穿透是我从一个真实的项目需求中提炼出来的，不妨就以此来解释。航天器的轨道可以由时间序列和状态序列组成。时间我们用<code>double</code>类型，状态用<code>std::array&lt;double, 6&gt;</code>类型，那么时间序列可以表示成<code>using Tlist = std::vector&lt;double&gt;;</code>，状态序列可以表示成<code>using Ylist = std::vector&lt;std::array&lt;double, 6&gt;&gt;;</code>，轨道则为<code>using Orbit = std::tuple&lt;Tlist, Ylist&gt;;</code>。</p>
+<p>我们还知道 C++ 标准库有一个非常 <strong>fancy</strong> 且<strong>现代</strong>且<strong>未来是属于它的</strong>的工具库叫 <code>ranges</code>（太多东西想讲了，留到下次吧），它提供了诸多<code>views</code>，比如<code>std::ranges::reverse_view</code>可以逆序访问容器。我们想让<code>std::ranges::reverse_view&lt;Orbit&gt;</code>变成<code>std::tuple&lt;std::ranges::reverse_view&lt;Tlist&gt;, std::ranges::reverse_view&lt;Ylist&gt;&gt;</code>，这就需要用到模板穿透技术。</p>
+<p>但是，我们仍然不得不再做一些声明，以免误导大家：</p>
+<ol>
+<li><code>std::tuple</code>是不可以直接传入<code>std::ranges::reverse_view</code>的，因为它不符合 ranges 的概念，上面那么书写只是起演示作用。在真实项目中，我们是对<code>Orbit</code>类做了容器化改造的。</li>
+<li><code>views</code>最令人拍手叫绝的正是多个<code>views</code>的灵活串联，看似跟我们的多模板嵌套恰好契合，然而我们的这个应用示例还是太理想化了，因为<code>std::ranges::reverse_view</code>恰好只接受一个参数，可惜绝大多数<code>views</code>是接受多参数的，比如<code>std::ranges::drop_view</code>和<code>std::ranges::stride_view</code>等等，它们都不适用于模板穿透。</li>
+<li><code>std::ranges::reverse_view</code>不是空类，所以<code>foo</code>函数不可以再直接<code>return {};</code>，还需要适应性改造，具体如何做就留给大家思考吧。</li>
+</ol>
+<p>总之，这项技术确实没太明显的实用价值，我本人也更多地将其作为一种技术储备，但是也不能抹杀它对于逻辑的锻炼作用，尤其是对于理解<strong>编译期递归</strong>大有裨益。</p>
+
+        </div>
+        
+        <div class="licensing">
+            <div class="licensing-title">
+                <p><strong>C++ 模板穿透技术</strong></p>
+                <p><a href="/post/C++ 模板穿透技术/">https://qingyayaya.github.io/post/C++ 模板穿透技术/</a></p>
+            </div>
+            <div class="licensing-meta">
+                <div>
+                    <p class="licensing-item-title">Author</p>
+                    <p><a href="https://qingyayaya.github.io">青崖同学</a></p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">Release</p>
+                    <p>2024-10-23 10:00:00</p>
+                </div>
+                <div>
+                    <p class="licensing-item-title">License</p>
+                    <p><a href="https://creativecommons.org/">Creative Commons</a></p>
+                </div>
+            </div>
+        </div>
+        
+    </article>
+</body>
+</html>
